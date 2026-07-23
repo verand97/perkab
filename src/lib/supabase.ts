@@ -4,18 +4,27 @@ import { SupabaseConfig } from '../types';
 const STORAGE_KEY = 'perkab_supabase_config';
 
 export function getStoredSupabaseConfig(): SupabaseConfig {
+  // 1. Check if user configured custom URL/Key in Settings Modal
   const saved = localStorage.getItem(STORAGE_KEY);
   if (saved) {
     try {
-      return JSON.parse(saved);
+      const parsed = JSON.parse(saved);
+      if (parsed.url || parsed.anonKey) {
+        return parsed;
+      }
     } catch {
       // ignore
     }
   }
+
+  // 2. Fallback to Environment Variables (VITE_SUPABASE_URL & VITE_SUPABASE_ANON_KEY)
+  const envUrl = (import.meta.env.VITE_SUPABASE_URL as string) || '';
+  const envKey = (import.meta.env.VITE_SUPABASE_ANON_KEY as string) || '';
+
   return {
-    url: '',
-    anonKey: '',
-    isConnected: false,
+    url: envUrl,
+    anonKey: envKey,
+    isConnected: Boolean(envUrl && envKey),
   };
 }
 
@@ -27,7 +36,7 @@ let supabaseInstance: SupabaseClient | null = null;
 
 export function getSupabaseClient(): SupabaseClient | null {
   if (supabaseInstance) return supabaseInstance;
-  
+
   const config = getStoredSupabaseConfig();
   if (config.url && config.anonKey) {
     try {

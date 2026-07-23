@@ -3,7 +3,6 @@ import {
   Package,
   Plus,
   Search,
-  Filter,
   QrCode,
   Edit2,
   Trash2,
@@ -12,6 +11,7 @@ import {
   X,
   Printer,
   FileSpreadsheet,
+  Layers,
 } from 'lucide-react';
 import { usePerkab } from '../context/PerkabContext';
 import { InventoryItem, InventoryCategory, ItemCondition, ItemOwnership } from '../types';
@@ -21,7 +21,7 @@ interface InventoryViewProps {
   onOpenExport: () => void;
 }
 
-export const InventoryView: React.FC<InventoryViewProps> = () => {
+export const InventoryView: React.FC<InventoryViewProps> = ({ onOpenExport }) => {
   const {
     inventory,
     addInventoryItem,
@@ -162,22 +162,22 @@ export const InventoryView: React.FC<InventoryViewProps> = () => {
 
   return (
     <div className="space-y-6">
-      {/* Header & Actions */}
+      {/* Header Bar */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-extrabold text-white tracking-tight flex items-center gap-2">
+          <h2 className="text-2xl font-black text-white tracking-tight flex items-center gap-2 font-heading">
             <Package className="w-6 h-6 text-emerald-400" />
             <span>Pendataan Logistik & Inventaris</span>
           </h2>
           <p className="text-xs text-slate-400 mt-1">
-            Daftar lengkap seluruh barang bawaan kelompok, aset posko, dan barang sewa/pinjaman warga
+            Katalog terstruktur barang kelompok posko, alat milik warga desa, kampus, & barang sewa
           </p>
         </div>
 
         <div className="flex items-center gap-2">
           <button
             onClick={handleExportCSV}
-            className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-semibold transition-all"
+            className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-800 text-xs font-bold transition-all"
           >
             <FileSpreadsheet className="w-4 h-4 text-emerald-400" />
             <span>Export CSV</span>
@@ -188,7 +188,7 @@ export const InventoryView: React.FC<InventoryViewProps> = () => {
               resetForm();
               setIsAddModalOpen(true);
             }}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-md shadow-emerald-600/20 transition-all"
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-extrabold shadow-md shadow-emerald-600/20 active:scale-95 transition-all"
           >
             <Plus className="w-4 h-4" />
             <span>Tambah Barang Baru</span>
@@ -196,27 +196,27 @@ export const InventoryView: React.FC<InventoryViewProps> = () => {
         </div>
       </div>
 
-      {/* Filter Bar */}
-      <div className="glass-panel rounded-2xl p-4 space-y-4">
+      {/* Filter & Toolbar */}
+      <div className="glass-card rounded-2xl p-4 space-y-4 border border-slate-800">
         <div className="flex flex-col md:flex-row gap-3">
           {/* Search Box */}
           <div className="relative flex-1">
             <Search className="w-4 h-4 absolute left-3.5 top-3 text-slate-400" />
             <input
               type="text"
-              placeholder="Cari berdasarkan nama barang, kode (PKB-...), atau lokasi..."
+              placeholder="Cari berdasarkan nama barang, kode (PKB-...), atau lokasi posko..."
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 rounded-xl bg-slate-800/80 border border-slate-700 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-emerald-500 transition-colors"
+              className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-900/90 border border-slate-800 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-emerald-500"
             />
           </div>
 
-          {/* Condition Filter */}
+          {/* Condition Selects */}
           <div className="flex items-center gap-2">
             <select
               value={selectedCondition}
               onChange={e => setSelectedCondition(e.target.value)}
-              className="px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-xs text-slate-200 focus:outline-none focus:border-emerald-500"
+              className="px-3 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-xs text-slate-200 focus:outline-none focus:border-emerald-500 font-semibold"
             >
               <option value="ALL">Semua Kondisi</option>
               <option value="Bagus">Bagus</option>
@@ -227,7 +227,7 @@ export const InventoryView: React.FC<InventoryViewProps> = () => {
             <select
               value={selectedOwnership}
               onChange={e => setSelectedOwnership(e.target.value)}
-              className="px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-xs text-slate-200 focus:outline-none focus:border-emerald-500"
+              className="px-3 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-xs text-slate-200 focus:outline-none focus:border-emerald-500 font-semibold"
             >
               <option value="ALL">Semua Kepemilikan</option>
               <option value="Kelompok">Milik Kelompok</option>
@@ -239,16 +239,16 @@ export const InventoryView: React.FC<InventoryViewProps> = () => {
         </div>
 
         {/* Category Pills */}
-        <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-slate-800/80">
-          <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mr-1">
+        <div className="flex flex-wrap items-center gap-2 pt-3 border-t border-slate-800/80">
+          <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest mr-1 font-heading">
             Kategori:
           </span>
           <button
             onClick={() => setSelectedCategory('ALL')}
-            className={`px-3 py-1 rounded-full text-xs font-semibold transition-all ${
+            className={`px-3 py-1 rounded-full text-xs font-bold transition-all ${
               selectedCategory === 'ALL'
-                ? 'bg-emerald-500 text-white shadow-md shadow-emerald-500/20'
-                : 'bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-slate-200'
+                ? 'bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/20'
+                : 'bg-slate-900 text-slate-400 hover:bg-slate-800 hover:text-slate-200 border border-slate-800'
             }`}
           >
             Semua ({inventory.length})
@@ -259,10 +259,10 @@ export const InventoryView: React.FC<InventoryViewProps> = () => {
               <button
                 key={cat}
                 onClick={() => setSelectedCategory(cat)}
-                className={`px-3 py-1 rounded-full text-xs font-semibold transition-all ${
+                className={`px-3 py-1 rounded-full text-xs font-bold transition-all ${
                   selectedCategory === cat
-                    ? 'bg-emerald-500 text-white shadow-md shadow-emerald-500/20'
-                    : 'bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-slate-200'
+                    ? 'bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/20'
+                    : 'bg-slate-900 text-slate-400 hover:bg-slate-800 hover:text-slate-200 border border-slate-800'
                 }`}
               >
                 {cat} ({count})
@@ -272,12 +272,12 @@ export const InventoryView: React.FC<InventoryViewProps> = () => {
         </div>
       </div>
 
-      {/* Inventory Table */}
-      <div className="glass-panel rounded-2xl overflow-hidden border border-slate-800">
+      {/* Data Table */}
+      <div className="glass-card rounded-2xl overflow-hidden border border-slate-800 shadow-xl">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs border-collapse">
             <thead>
-              <tr className="bg-slate-800/80 text-slate-400 font-semibold border-b border-slate-700/70">
+              <tr className="bg-slate-900/90 text-slate-400 font-extrabold border-b border-slate-800 font-heading">
                 <th className="py-3.5 px-4">Kode & Nama Barang</th>
                 <th className="py-3.5 px-4">Kategori</th>
                 <th className="py-3.5 px-4 text-center">Jumlah / Stuk</th>
@@ -290,13 +290,12 @@ export const InventoryView: React.FC<InventoryViewProps> = () => {
             <tbody className="divide-y divide-slate-800/60">
               {filteredItems.map(item => (
                 <tr key={item.id} className="hover:bg-slate-800/40 transition-colors">
-                  {/* Name & Code */}
-                  <td className="py-3 px-4">
-                    <div className="font-bold text-slate-100 flex items-center gap-2">
+                  <td className="py-3.5 px-4">
+                    <div className="font-bold text-slate-100 flex items-center gap-2 font-heading">
                       <span>{item.name}</span>
                     </div>
-                    <div className="flex items-center gap-2 mt-0.5">
-                      <span className="font-mono text-[10px] text-emerald-400 bg-emerald-950/60 px-1.5 py-0.5 rounded border border-emerald-800/40">
+                    <div className="flex items-center gap-2 mt-1">
+                      <span className="font-mono text-[10px] text-emerald-400 bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-800/40 font-bold">
                         {item.code}
                       </span>
                       {item.notes && (
@@ -307,16 +306,14 @@ export const InventoryView: React.FC<InventoryViewProps> = () => {
                     </div>
                   </td>
 
-                  {/* Category */}
-                  <td className="py-3 px-4">
-                    <span className="px-2.5 py-1 rounded-lg bg-slate-800 text-slate-300 border border-slate-700 text-[11px] font-medium">
+                  <td className="py-3.5 px-4">
+                    <span className="px-2.5 py-1 rounded-lg bg-slate-900 text-slate-300 border border-slate-800 text-[11px] font-semibold">
                       {item.category}
                     </span>
                   </td>
 
-                  {/* Qty */}
-                  <td className="py-3 px-4 text-center">
-                    <div className="font-bold text-slate-100">
+                  <td className="py-3.5 px-4 text-center">
+                    <div className="font-bold text-slate-100 font-mono">
                       {item.availableQty} / {item.quantity} {item.unit}
                     </div>
                     <span className="text-[10px] text-slate-400">
@@ -324,10 +321,9 @@ export const InventoryView: React.FC<InventoryViewProps> = () => {
                     </span>
                   </td>
 
-                  {/* Condition */}
-                  <td className="py-3 px-4">
+                  <td className="py-3.5 px-4">
                     <span
-                      className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold border ${
+                      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-extrabold border ${
                         item.condition === 'Bagus'
                           ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
                           : item.condition === 'Perlu Perbaikan'
@@ -336,40 +332,37 @@ export const InventoryView: React.FC<InventoryViewProps> = () => {
                       }`}
                     >
                       {item.condition === 'Bagus' ? (
-                        <CheckCircle2 className="w-3 h-3" />
+                        <CheckCircle2 className="w-3.5 h-3.5" />
                       ) : (
-                        <AlertCircle className="w-3 h-3" />
+                        <AlertCircle className="w-3.5 h-3.5" />
                       )}
                       <span>{item.condition}</span>
                     </span>
                   </td>
 
-                  {/* Ownership */}
-                  <td className="py-3 px-4">
-                    <div className="font-semibold text-slate-200">{item.ownership}</div>
+                  <td className="py-3.5 px-4">
+                    <div className="font-bold text-slate-200">{item.ownership}</div>
                     {item.lenderName && (
                       <div className="text-[10px] text-slate-400">{item.lenderName}</div>
                     )}
                   </td>
 
-                  {/* Location */}
-                  <td className="py-3 px-4 text-slate-300 font-medium">
+                  <td className="py-3.5 px-4 text-slate-300 font-semibold">
                     {item.location}
                   </td>
 
-                  {/* Actions */}
-                  <td className="py-3 px-4 text-center">
+                  <td className="py-3.5 px-4 text-center">
                     <div className="flex items-center justify-center gap-1.5">
                       <button
                         onClick={() => setQrItem(item)}
-                        className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-teal-400 hover:text-teal-300 border border-slate-700"
+                        className="p-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-teal-400 hover:text-teal-300 border border-slate-800"
                         title="Cetak Tag Label & QR Code"
                       >
                         <QrCode className="w-3.5 h-3.5" />
                       </button>
                       <button
                         onClick={() => openEditModal(item)}
-                        className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700"
+                        className="p-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-800"
                         title="Edit Barang"
                       >
                         <Edit2 className="w-3.5 h-3.5" />
@@ -384,7 +377,7 @@ export const InventoryView: React.FC<InventoryViewProps> = () => {
                             onConfirm: () => deleteInventoryItem(item.id),
                           });
                         }}
-                        className="p-1.5 rounded-lg bg-slate-800 hover:bg-rose-900/60 text-slate-400 hover:text-rose-300 border border-slate-700"
+                        className="p-1.5 rounded-xl bg-slate-900 hover:bg-rose-950/60 text-slate-400 hover:text-rose-300 border border-slate-800"
                         title="Hapus Barang"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
@@ -396,8 +389,8 @@ export const InventoryView: React.FC<InventoryViewProps> = () => {
 
               {filteredItems.length === 0 && (
                 <tr>
-                  <td colSpan={7} className="py-8 text-center text-slate-500">
-                    Tidak ada barang inventaris yang sesuai dengan filter.
+                  <td colSpan={7} className="py-12 text-center text-slate-500">
+                    Tidak ada barang inventaris yang sesuai dengan filter. Klik "+ Tambah Barang Baru" untuk memasukkan data.
                   </td>
                 </tr>
               )}
@@ -408,10 +401,10 @@ export const InventoryView: React.FC<InventoryViewProps> = () => {
 
       {/* Modal Add / Edit Inventory */}
       {(isAddModalOpen || editingItem) && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
-          <div className="glass-panel w-full max-w-lg rounded-2xl p-6 border border-slate-700 shadow-2xl relative space-y-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
+          <div className="glass-card w-full max-w-lg rounded-3xl p-6 border border-slate-700 shadow-2xl space-y-4">
             <div className="flex items-center justify-between pb-3 border-b border-slate-800">
-              <h3 className="text-lg font-extrabold text-white">
+              <h3 className="text-lg font-black text-white font-heading">
                 {editingItem ? 'Edit Barang Inventaris' : 'Tambah Logistik Inventaris Baru'}
               </h3>
               <button
@@ -427,24 +420,24 @@ export const InventoryView: React.FC<InventoryViewProps> = () => {
 
             <form onSubmit={editingItem ? handleEditSubmit : handleCreateSubmit} className="space-y-4 text-xs">
               <div>
-                <label className="block font-semibold text-slate-300 mb-1">Nama Barang *</label>
+                <label className="block font-bold text-slate-300 mb-1">Nama Barang *</label>
                 <input
                   type="text"
                   required
                   placeholder="Contoh: Sound System Portable / Kabel Roll 25m"
                   value={formData.name}
                   onChange={e => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full px-3.5 py-2 rounded-xl bg-slate-800 border border-slate-700 text-slate-100 placeholder-slate-500 focus:outline-none focus:border-emerald-500"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-100 placeholder-slate-500 focus:outline-none focus:border-emerald-500"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block font-semibold text-slate-300 mb-1">Kategori *</label>
+                  <label className="block font-bold text-slate-300 mb-1">Kategori *</label>
                   <select
                     value={formData.category}
                     onChange={e => setFormData({ ...formData, category: e.target.value as InventoryCategory })}
-                    className="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-slate-100 focus:outline-none focus:border-emerald-500"
+                    className="w-full px-3 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-100 focus:outline-none focus:border-emerald-500 font-semibold"
                   >
                     {categories.map(c => (
                       <option key={c} value={c}>{c}</option>
@@ -453,11 +446,11 @@ export const InventoryView: React.FC<InventoryViewProps> = () => {
                 </div>
 
                 <div>
-                  <label className="block font-semibold text-slate-300 mb-1">Kepemilikan *</label>
+                  <label className="block font-bold text-slate-300 mb-1">Kepemilikan *</label>
                   <select
                     value={formData.ownership}
                     onChange={e => setFormData({ ...formData, ownership: e.target.value as ItemOwnership })}
-                    className="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-slate-100 focus:outline-none focus:border-emerald-500"
+                    className="w-full px-3 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-100 focus:outline-none focus:border-emerald-500 font-semibold"
                   >
                     <option value="Kelompok">Milik Kelompok KKN</option>
                     <option value="Warga Desa">Pinjaman Warga Desa</option>
@@ -469,47 +462,47 @@ export const InventoryView: React.FC<InventoryViewProps> = () => {
 
               {formData.ownership !== 'Kelompok' && (
                 <div>
-                  <label className="block font-semibold text-slate-300 mb-1">Nama Pemilik / Tempat Sewa</label>
+                  <label className="block font-bold text-slate-300 mb-1">Nama Pemilik / Tempat Sewa</label>
                   <input
                     type="text"
                     placeholder="Nama warga / laboratorium kampus / tempat rental"
                     value={formData.lenderName}
                     onChange={e => setFormData({ ...formData, lenderName: e.target.value })}
-                    className="w-full px-3.5 py-2 rounded-xl bg-slate-800 border border-slate-700 text-slate-100 focus:outline-none focus:border-emerald-500"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-100 focus:outline-none focus:border-emerald-500"
                   />
                 </div>
               )}
 
               <div className="grid grid-cols-3 gap-3">
                 <div>
-                  <label className="block font-semibold text-slate-300 mb-1">Jumlah Total *</label>
+                  <label className="block font-bold text-slate-300 mb-1">Jumlah Total *</label>
                   <input
                     type="number"
                     min="1"
                     required
                     value={formData.quantity}
                     onChange={e => setFormData({ ...formData, quantity: parseInt(e.target.value) || 1 })}
-                    className="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-slate-100 focus:outline-none focus:border-emerald-500"
+                    className="w-full px-3 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-100 focus:outline-none focus:border-emerald-500 font-mono"
                   />
                 </div>
 
                 <div>
-                  <label className="block font-semibold text-slate-300 mb-1">Satuan *</label>
+                  <label className="block font-bold text-slate-300 mb-1">Satuan *</label>
                   <input
                     type="text"
                     placeholder="Unit / Pcs / Roll"
                     value={formData.unit}
                     onChange={e => setFormData({ ...formData, unit: e.target.value })}
-                    className="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-slate-100 focus:outline-none focus:border-emerald-500"
+                    className="w-full px-3 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-100 focus:outline-none focus:border-emerald-500"
                   />
                 </div>
 
                 <div>
-                  <label className="block font-semibold text-slate-300 mb-1">Kondisi *</label>
+                  <label className="block font-bold text-slate-300 mb-1">Kondisi *</label>
                   <select
                     value={formData.condition}
                     onChange={e => setFormData({ ...formData, condition: e.target.value as ItemCondition })}
-                    className="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-slate-100 focus:outline-none focus:border-emerald-500"
+                    className="w-full px-3 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-100 focus:outline-none focus:border-emerald-500 font-semibold"
                   >
                     <option value="Bagus">Bagus</option>
                     <option value="Perlu Perbaikan">Perlu Perbaikan</option>
@@ -519,25 +512,25 @@ export const InventoryView: React.FC<InventoryViewProps> = () => {
               </div>
 
               <div>
-                <label className="block font-semibold text-slate-300 mb-1">Lokasi Penyimpanan di Posko *</label>
+                <label className="block font-bold text-slate-300 mb-1">Lokasi Penyimpanan di Posko *</label>
                 <input
                   type="text"
                   required
                   placeholder="Contoh: Rak Posko 1 / Box A / Dapur"
                   value={formData.location}
                   onChange={e => setFormData({ ...formData, location: e.target.value })}
-                  className="w-full px-3.5 py-2 rounded-xl bg-slate-800 border border-slate-700 text-slate-100 focus:outline-none focus:border-emerald-500"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-100 focus:outline-none focus:border-emerald-500"
                 />
               </div>
 
               <div>
-                <label className="block font-semibold text-slate-300 mb-1">Catatan Tambahan</label>
+                <label className="block font-bold text-slate-300 mb-1">Catatan Tambahan</label>
                 <textarea
                   rows={2}
                   placeholder="Kelengkapan kabel, instruksi pemakaian, dll..."
                   value={formData.notes}
                   onChange={e => setFormData({ ...formData, notes: e.target.value })}
-                  className="w-full px-3.5 py-2 rounded-xl bg-slate-800 border border-slate-700 text-slate-100 focus:outline-none focus:border-emerald-500"
+                  className="w-full px-3.5 py-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-100 focus:outline-none focus:border-emerald-500"
                 />
               </div>
 
@@ -548,13 +541,13 @@ export const InventoryView: React.FC<InventoryViewProps> = () => {
                     setIsAddModalOpen(false);
                     setEditingItem(null);
                   }}
-                  className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold"
+                  className="px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 font-semibold"
                 >
                   Batal
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold shadow-lg shadow-emerald-600/25"
+                  className="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold shadow-lg shadow-emerald-600/20"
                 >
                   {editingItem ? 'Simpan Perubahan' : 'Tambah Barang'}
                 </button>
@@ -564,12 +557,12 @@ export const InventoryView: React.FC<InventoryViewProps> = () => {
         </div>
       )}
 
-      {/* Printable Tag Label & QR Code Modal */}
+      {/* Printable Tag Label Modal */}
       {qrItem && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-sm">
-          <div className="glass-panel w-full max-w-md rounded-2xl p-6 border border-slate-700 shadow-2xl space-y-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md">
+          <div className="glass-card w-full max-w-md rounded-3xl p-6 border border-slate-700 shadow-2xl space-y-4">
             <div className="flex items-center justify-between pb-3 border-b border-slate-800 no-print">
-              <h3 className="text-base font-bold text-white flex items-center gap-2">
+              <h3 className="text-base font-extrabold text-white flex items-center gap-2 font-heading">
                 <QrCode className="w-5 h-5 text-teal-400" />
                 <span>Tag Label & QR Inventaris</span>
               </h3>
@@ -578,31 +571,29 @@ export const InventoryView: React.FC<InventoryViewProps> = () => {
               </button>
             </div>
 
-            {/* Printable Tag Card */}
-            <div className="printable-area border-2 border-dashed border-emerald-500/40 rounded-xl p-5 bg-slate-900/90 text-center space-y-3">
-              <div className="inline-block bg-emerald-500 text-white text-[10px] font-extrabold uppercase px-2.5 py-0.5 rounded-full">
+            <div className="printable-area border-2 border-dashed border-emerald-500/40 rounded-2xl p-5 bg-slate-950 text-center space-y-3">
+              <div className="inline-block bg-emerald-500 text-slate-950 text-[10px] font-black uppercase px-3 py-0.5 rounded-full font-heading">
                 PROPERTY OF LOGISTIK KKN 2026
               </div>
 
-              <div className="w-32 h-32 mx-auto bg-white p-2 rounded-xl flex items-center justify-center shadow-inner">
-                {/* SVG Mockup of QR Code */}
-                <svg className="w-full h-full text-slate-900" viewBox="0 0 24 24" fill="currentColor">
+              <div className="w-32 h-32 mx-auto bg-white p-2 rounded-2xl flex items-center justify-center shadow-inner">
+                <svg className="w-full h-full text-slate-950" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M2 2h8v8H2V2zm2 2v4h4V4H4zm9-2h8v8h-8V2zm2 2v4h4V4h-4zM2 14h8v8H2v-8zm2 2v4h4v-4H4zm13-2h2v2h-2v-2zm-4 0h2v2h-2v-2zm2 4h2v2h-2v-2zm2-2h2v2h-2v-2zm-4 4h2v2h-2v-2zm4 0h2v2h-2v-2z" />
                 </svg>
               </div>
 
               <div>
-                <h4 className="text-base font-extrabold text-white">{qrItem.name}</h4>
+                <h4 className="text-base font-black text-white font-heading">{qrItem.name}</h4>
                 <div className="font-mono text-xs font-bold text-emerald-400 mt-0.5">{qrItem.code}</div>
               </div>
 
-              <div className="grid grid-cols-2 gap-2 text-[11px] bg-slate-800/80 p-2.5 rounded-lg text-slate-300 border border-slate-700">
+              <div className="grid grid-cols-2 gap-2 text-[11px] bg-slate-900/80 p-2.5 rounded-xl text-slate-300 border border-slate-800">
                 <div>
-                  <span className="text-slate-400 block text-[9px] uppercase">Kategori</span>
+                  <span className="text-slate-400 block text-[9px] uppercase font-bold font-heading">Kategori</span>
                   <strong>{qrItem.category}</strong>
                 </div>
                 <div>
-                  <span className="text-slate-400 block text-[9px] uppercase">Lokasi Posko</span>
+                  <span className="text-slate-400 block text-[9px] uppercase font-bold font-heading">Lokasi Posko</span>
                   <strong>{qrItem.location}</strong>
                 </div>
               </div>
