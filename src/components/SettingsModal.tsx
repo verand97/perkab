@@ -1,0 +1,227 @@
+import React, { useState } from 'react';
+import {
+  Settings,
+  Database,
+  CloudCheck,
+  HardDrive,
+  Copy,
+  Check,
+  RotateCcw,
+  Trash2,
+  X,
+  Code2,
+} from 'lucide-react';
+import { usePerkab } from '../context/PerkabContext';
+import { SUPABASE_SQL_SCHEMA } from '../lib/supabase';
+
+interface SettingsModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
+  const { supabaseConfig, updateSupabaseConfig, resetToSampleData, clearAllData } = usePerkab();
+
+  const [url, setUrl] = useState(supabaseConfig.url || '');
+  const [anonKey, setAnonKey] = useState(supabaseConfig.anonKey || '');
+  const [isTesting, setIsTesting] = useState(false);
+  const [testResult, setTestResult] = useState<{ success: boolean; message: string } | null>(null);
+  const [isCopied, setIsCopied] = useState(false);
+  const [showSql, setShowSql] = useState(false);
+
+  if (!isOpen) return null;
+
+  const handleSaveSupabase = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsTesting(true);
+    setTestResult(null);
+
+    const success = await updateSupabaseConfig({
+      url: url.trim(),
+      anonKey: anonKey.trim(),
+      isConnected: false,
+    });
+
+    setIsTesting(false);
+
+    if (success) {
+      setTestResult({
+        success: true,
+        message: 'Koneksi Supabase Cloud Berhasil! Data terhubung secara online.',
+      });
+    } else {
+      setTestResult({
+        success: false,
+        message: 'Gagal terhubung ke Supabase. Pastikan URL, Anon Key, dan skema tabel sudah dibuat di Supabase Dashboard.',
+      });
+    }
+  };
+
+  const handleCopySql = () => {
+    navigator.clipboard.writeText(SUPABASE_SQL_SCHEMA);
+    setIsCopied(true);
+    setTimeout(() => setIsCopied(false), 2000);
+  };
+
+  const handleClearAll = async () => {
+    if (confirm('PERINGATAN: Apakah Anda yakin ingin MENGOSONGKAN DAN BERSIHKAN SEMUA DATA (Inventaris, Peminjaman, Posko, Transport, Proker, Kerusakan)? Data lokal dan database cloud akan dihapus.')) {
+      await clearAllData(true);
+      alert('Semua data berhasil dibersihkan! Database dan aplikasi kini kosong dan siap diisi data riil.');
+      onClose();
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-sm">
+      <div className="glass-panel w-full max-w-xl rounded-2xl p-6 border border-slate-700 shadow-2xl space-y-5 relative max-h-[90vh] overflow-y-auto">
+        <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-xl bg-slate-800 text-teal-400 border border-slate-700">
+              <Database className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 className="text-lg font-extrabold text-white">Pengaturan Database & Backend</h3>
+              <p className="text-xs text-slate-400">
+                Mode Offline (Local Storage) atau Cloud Sync Supabase
+              </p>
+            </div>
+          </div>
+          <button onClick={onClose} className="p-1 text-slate-400 hover:text-white">
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        {/* Current Active Mode */}
+        <div className="p-4 rounded-xl bg-slate-900/90 border border-slate-800 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            {supabaseConfig.isConnected ? (
+              <CloudCheck className="w-6 h-6 text-emerald-400" />
+            ) : (
+              <HardDrive className="w-6 h-6 text-amber-400" />
+            )}
+            <div>
+              <div className="text-xs font-bold text-white">
+                {supabaseConfig.isConnected ? 'Mode Supabase Cloud' : 'Mode Offline (Browser Storage)'}
+              </div>
+              <div className="text-[11px] text-slate-400">
+                {supabaseConfig.isConnected
+                  ? 'Tersinkronisasi secara real-time ke Supabase cloud'
+                  : 'Data tersimpan lokal di browser Anda (tanpa perlu server)'}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Supabase Form */}
+        <form onSubmit={handleSaveSupabase} className="space-y-3.5 text-xs">
+          <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider">
+            Konfigurasi Supabase Project:
+          </h4>
+
+          <div>
+            <label className="block font-semibold text-slate-400 mb-1">Project URL</label>
+            <input
+              type="text"
+              placeholder="https://xyzxyz.supabase.co"
+              value={url}
+              onChange={e => setUrl(e.target.value)}
+              className="w-full px-3.5 py-2 rounded-xl bg-slate-800 border border-slate-700 text-slate-100 placeholder-slate-500 focus:outline-none focus:border-teal-500 font-mono"
+            />
+          </div>
+
+          <div>
+            <label className="block font-semibold text-slate-400 mb-1">Anon API Key</label>
+            <input
+              type="password"
+              placeholder="eyJhbGciOiJIUzI1NiIsInR..."
+              value={anonKey}
+              onChange={e => setAnonKey(e.target.value)}
+              className="w-full px-3.5 py-2 rounded-xl bg-slate-800 border border-slate-700 text-slate-100 placeholder-slate-500 focus:outline-none focus:border-teal-500 font-mono"
+            />
+          </div>
+
+          {testResult && (
+            <div
+              className={`p-3 rounded-xl border text-xs leading-relaxed ${
+                testResult.success
+                  ? 'bg-emerald-950/40 text-emerald-300 border-emerald-500/40'
+                  : 'bg-rose-950/40 text-rose-300 border-rose-500/40'
+              }`}
+            >
+              {testResult.message}
+            </div>
+          )}
+
+          <div className="flex items-center justify-between pt-1">
+            <button
+              type="button"
+              onClick={() => setShowSql(!showSql)}
+              className="text-xs font-semibold text-teal-400 hover:underline flex items-center gap-1"
+            >
+              <Code2 className="w-3.5 h-3.5" />
+              <span>{showSql ? 'Sembunyikan Skema SQL' : 'Lihat Skema SQL Supabase'}</span>
+            </button>
+
+            <button
+              type="submit"
+              disabled={isTesting}
+              className="px-5 py-2 rounded-xl bg-teal-600 hover:bg-teal-500 disabled:opacity-50 text-white font-bold shadow"
+            >
+              {isTesting ? 'Testing Koneksi...' : 'Simpan & Tes Koneksi'}
+            </button>
+          </div>
+        </form>
+
+        {/* SQL Schema Preview */}
+        {showSql && (
+          <div className="space-y-2 pt-2 border-t border-slate-800">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-slate-300">Skema DDL Database Supabase:</span>
+              <button
+                onClick={handleCopySql}
+                className="flex items-center gap-1 px-3 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-teal-300 text-xs font-semibold border border-slate-700"
+              >
+                {isCopied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                <span>{isCopied ? 'Tercopy!' : 'Copy SQL Script'}</span>
+              </button>
+            </div>
+
+            <pre className="p-3 rounded-xl bg-slate-950 border border-slate-800 text-[10px] text-slate-300 overflow-x-auto max-h-40 font-mono">
+              {SUPABASE_SQL_SCHEMA}
+            </pre>
+          </div>
+        )}
+
+        {/* Data Management Section */}
+        <div className="pt-4 border-t border-slate-800 space-y-3">
+          <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider">
+            Manajemen Data & Reset:
+          </h4>
+
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+            <button
+              onClick={handleClearAll}
+              className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold shadow transition-all"
+            >
+              <Trash2 className="w-4 h-4" />
+              <span>Bersihkan Semua Data (Kosongkan)</span>
+            </button>
+
+            <button
+              onClick={() => {
+                if (confirm('Reset data ke data simulasi / contoh awal KKN?')) {
+                  resetToSampleData();
+                  onClose();
+                }
+              }}
+              className="flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 text-xs font-semibold"
+            >
+              <RotateCcw className="w-3.5 h-3.5" />
+              <span>Muat Ulang Demo Data</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
