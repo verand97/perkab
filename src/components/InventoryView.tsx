@@ -420,24 +420,25 @@ export const InventoryView: React.FC<InventoryViewProps> = ({ onOpenExport }) =>
 
       {/* Modal Add / Edit Inventory */}
       {(isAddModalOpen || editingItem) && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
-          <div className="glass-card w-full max-w-lg rounded-3xl p-6 border border-slate-700 shadow-2xl space-y-4">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md overflow-y-auto">
+          <div className="glass-card w-full max-w-lg rounded-3xl p-6 border border-slate-700 shadow-2xl my-auto max-h-[90vh] flex flex-col">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-800 shrink-0">
               <h3 className="text-lg font-black text-white font-heading">
                 {editingItem ? 'Edit Barang Inventaris' : 'Tambah Logistik Inventaris Baru'}
               </h3>
               <button
+                type="button"
                 onClick={() => {
                   setIsAddModalOpen(false);
                   setEditingItem(null);
                 }}
-                className="p-1 text-slate-400 hover:text-white"
+                className="p-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <form onSubmit={editingItem ? handleEditSubmit : handleCreateSubmit} className="space-y-4 text-xs">
+            <form onSubmit={editingItem ? handleEditSubmit : handleCreateSubmit} className="flex-1 overflow-y-auto py-3 pr-1 space-y-4 text-xs">
               <div>
                 <label className="block font-bold text-slate-300 mb-1">Nama Barang *</label>
                 <input
@@ -559,7 +560,7 @@ export const InventoryView: React.FC<InventoryViewProps> = ({ onOpenExport }) =>
                 />
               </div>
 
-              <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-800">
+              <div className="shrink-0 flex items-center justify-end gap-3 pt-3 border-t border-slate-800">
                 <button
                   type="button"
                   onClick={() => {

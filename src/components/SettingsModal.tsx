@@ -96,24 +96,30 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-sm">
-      <div className="glass-panel w-full max-w-xl rounded-2xl p-6 border border-slate-700 shadow-2xl space-y-5 relative max-h-[90vh] overflow-y-auto">
-        <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md overflow-y-auto">
+      <div className="glass-card w-full max-w-xl rounded-3xl p-6 border border-slate-700 shadow-2xl my-auto max-h-[90vh] flex flex-col space-y-4">
+        <div className="flex items-center justify-between pb-3 border-b border-slate-800 shrink-0">
           <div className="flex items-center gap-3">
             <div className="p-2 rounded-xl bg-slate-800 text-teal-400 border border-slate-700">
               <Database className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="text-lg font-extrabold text-white">Pengaturan Database & Backend</h3>
+              <h3 className="text-lg font-black text-white font-heading">Pengaturan Database & Backend</h3>
               <p className="text-xs text-slate-400">
                 Mode Offline (Local Storage) atau Cloud Sync Supabase
               </p>
             </div>
           </div>
-          <button onClick={onClose} className="p-1 text-slate-400 hover:text-white">
+          <button
+            type="button"
+            onClick={onClose}
+            className="p-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition-colors"
+          >
             <X className="w-5 h-5" />
           </button>
         </div>
+
+        <div className="flex-1 overflow-y-auto space-y-4 pr-1">
 
         {/* Current Active Mode */}
         <div className="p-4 rounded-xl bg-slate-900/90 border border-slate-800 flex items-center justify-between">
@@ -238,6 +244,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
               <RotateCcw className="w-3.5 h-3.5" />
               <span>Muat Ulang Demo Data</span>
             </button>
+          </div>
           </div>
         </div>
       </div>

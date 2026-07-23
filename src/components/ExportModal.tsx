@@ -41,15 +41,15 @@ export const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose }) => 
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-sm">
-      <div className="glass-panel w-full max-w-xl rounded-2xl p-6 border border-slate-700 shadow-2xl space-y-5 relative">
-        <div className="flex items-center justify-between pb-4 border-b border-slate-800">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md overflow-y-auto">
+      <div className="glass-card w-full max-w-xl rounded-3xl p-6 border border-slate-700 shadow-2xl my-auto max-h-[90vh] flex flex-col space-y-4">
+        <div className="flex items-center justify-between pb-3 border-b border-slate-800 shrink-0">
           <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-500 text-white shadow">
+            <div className="p-2.5 rounded-xl bg-linear-to-tr from-emerald-600 to-teal-500 text-white shadow">
               <FileSpreadsheet className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="text-lg font-extrabold text-white">
+              <h3 className="text-lg font-black text-white font-heading">
                 Pusat Rekapitulasi Data (Excel & CSV)
               </h3>
               <p className="text-xs text-slate-400">
@@ -57,13 +57,19 @@ export const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose }) => 
               </p>
             </div>
           </div>
-          <button onClick={onClose} className="p-1 text-slate-400 hover:text-white">
+          <button
+            type="button"
+            onClick={onClose}
+            className="p-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition-colors"
+          >
             <X className="w-5 h-5" />
           </button>
         </div>
 
+        <div className="flex-1 overflow-y-auto space-y-4 pr-1">
+
         {/* Option 1: Full Excel Workbook (.xlsx) */}
-        <div className="p-5 rounded-2xl bg-gradient-to-r from-slate-900 to-emerald-950/50 border border-emerald-500/30 space-y-3">
+        <div className="p-5 rounded-2xl bg-linear-to-r from-slate-900 to-emerald-950/50 border border-emerald-500/30 space-y-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <span className="px-2.5 py-0.5 rounded-md bg-emerald-500 text-slate-950 text-[10px] font-extrabold uppercase">
@@ -80,7 +86,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose }) => 
 
           <button
             onClick={handleExportFullExcel}
-            className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-extrabold shadow-lg shadow-emerald-600/25 transition-all"
+            className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-linear-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-extrabold shadow-lg shadow-emerald-600/25 transition-all"
           >
             <Download className="w-4 h-4" />
             <span>Download Rekap Excel (.xlsx)</span>
@@ -159,6 +165,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose }) => 
               </span>
               <span className="text-[10px] text-slate-400">CSV</span>
             </button>
+            </div>
           </div>
         </div>
       </div>
