@@ -53,7 +53,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigate, onOpen
   return (
     <div className="space-y-6">
       {/* Welcome Banner */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-slate-900 via-slate-800 to-emerald-950 border border-slate-800 p-6 md:p-8 shadow-xl">
+      <div className="relative overflow-hidden rounded-2xl bg-linear-to-r from-slate-900 via-slate-800 to-emerald-950 border border-slate-800 p-6 md:p-8 shadow-xl">
         <div className="absolute right-0 top-0 -mt-10 -mr-10 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div>
@@ -91,7 +91,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigate, onOpen
       {/* Overdue / Urgent Alert Banner */}
       {overdueBorrowings.length > 0 && (
         <div className="rounded-xl bg-rose-950/40 border border-rose-500/40 p-4 flex items-start gap-4">
-          <div className="p-2.5 rounded-lg bg-rose-500/20 text-rose-400 flex-shrink-0">
+          <div className="p-2.5 rounded-lg bg-rose-500/20 text-rose-400 shrink-0">
             <AlertTriangle className="w-5 h-5 animate-bounce" />
           </div>
           <div className="flex-1">
@@ -296,7 +296,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigate, onOpen
                       </div>
                       <div className="w-full h-2 rounded-full bg-slate-700 overflow-hidden">
                         <div
-                          className="h-full bg-gradient-to-r from-emerald-500 to-teal-400 rounded-full transition-all duration-300"
+                          className="h-full bg-linear-to-r from-emerald-500 to-teal-400 rounded-full transition-all duration-300"
                           style={{ width: `${percent}%` }}
                         />
                       </div>

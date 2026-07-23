@@ -8,7 +8,9 @@ import {
   Truck,
   Wrench,
   ChevronRight,
+  Users,
 } from 'lucide-react';
+import { usePerkab } from '../context/PerkabContext';
 
 export type TabType =
   | 'dashboard'
@@ -17,7 +19,8 @@ export type TabType =
   | 'posko'
   | 'events'
   | 'transport'
-  | 'maintenance';
+  | 'maintenance'
+  | 'users';
 
 interface SidebarProps {
   activeTab: TabType;
@@ -35,6 +38,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
   setActiveTab,
   badgeCounts,
 }) => {
+  const { currentUser } = usePerkab();
+  const isAdmin = currentUser?.role === 'Admin';
+
   const menuItems = [
     {
       id: 'dashboard' as TabType,
@@ -85,10 +91,18 @@ export const Sidebar: React.FC<SidebarProps> = ({
       badgeColor: 'bg-rose-500/20 text-rose-400 border-rose-500/30',
       description: 'Barang Rusak & Retur',
     },
+    {
+      id: 'users' as TabType,
+      label: 'Manajemen User & Role',
+      icon: Users,
+      badge: isAdmin ? 'ADMIN' : undefined,
+      badgeColor: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30',
+      description: 'Kelola Akun & Hak Akses',
+    },
   ];
 
   return (
-    <aside className="w-full lg:w-64 flex-shrink-0">
+    <aside className="w-full lg:w-64 shrink-0">
       <nav className="glass-panel rounded-2xl p-3 space-y-1">
         <div className="px-3 py-2 text-[11px] font-bold tracking-wider text-slate-400 uppercase">
           Navigasi Utama
@@ -102,7 +116,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               onClick={() => setActiveTab(item.id)}
               className={`w-full flex items-center justify-between p-3 rounded-xl text-left transition-all duration-150 ${
                 isActive
-                  ? 'bg-gradient-to-r from-emerald-600 to-emerald-700 text-white shadow-lg shadow-emerald-700/25 ring-1 ring-emerald-400/30'
+                  ? 'bg-linear-to-r from-emerald-600 to-emerald-700 text-white shadow-lg shadow-emerald-700/25 ring-1 ring-emerald-400/30'
                   : 'text-slate-300 hover:bg-slate-800/70 hover:text-white'
               }`}
             >

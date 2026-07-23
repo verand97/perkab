@@ -119,3 +119,14 @@ export interface SupabaseConfig {
   anonKey: string;
   isConnected: boolean;
 }
+
+export type UserRole = 'Admin' | 'PJ Perkab' | 'Anggota';
+
+export interface UserAccount {
+  id: string;
+  name: string;
+  nim: string;
+  role: UserRole;
+  position?: string;
+  created_at?: string;
+}

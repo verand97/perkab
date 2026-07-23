@@ -8,6 +8,7 @@ import {
   TransportRecord,
   MaintenanceLog,
   SupabaseConfig,
+  UserAccount,
 } from '../types';
 import {
   INITIAL_INVENTORY,
@@ -17,6 +18,7 @@ import {
   INITIAL_EVENT_SETUPS,
   INITIAL_TRANSPORTS,
   INITIAL_MAINTENANCE_LOGS,
+  INITIAL_USERS,
 } from '../lib/sampleData';
 import {
   getStoredSupabaseConfig,
@@ -26,6 +28,17 @@ import {
 } from '../lib/supabase';
 
 interface PerkabContextType {
+  // Auth & Session
+  currentUser: UserAccount | null;
+  login: (nameOrNim: string, nim: string) => boolean;
+  logout: () => void;
+
+  // Users CRUD
+  users: UserAccount[];
+  addUser: (user: Omit<UserAccount, 'id'>) => void;
+  updateUser: (user: UserAccount) => void;
+  deleteUser: (id: string) => void;
+
   // Inventory
   inventory: InventoryItem[];
   addInventoryItem: (item: Omit<InventoryItem, 'id' | 'code'>) => void;
@@ -73,8 +86,22 @@ interface PerkabContextType {
 const PerkabContext = createContext<PerkabContextType | undefined>(undefined);
 
 const LOCAL_STORAGE_KEY = 'perkab_app_data_v1';
+const SESSION_KEY = 'perkab_session_user';
 
 export const PerkabProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [currentUser, setCurrentUser] = useState<UserAccount | null>(() => {
+    const saved = localStorage.getItem(SESSION_KEY);
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch {
+        // ignore
+      }
+    }
+    return null;
+  });
+
+  const [users, setUsers] = useState<UserAccount[]>([]);
   const [inventory, setInventory] = useState<InventoryItem[]>([]);
   const [borrowings, setBorrowings] = useState<BorrowingRecord[]>([]);
   const [facilities, setFacilities] = useState<PoskoFacility[]>([]);
@@ -92,6 +119,7 @@ export const PerkabProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
+        setUsers(parsed.users || INITIAL_USERS);
         setInventory(parsed.inventory || []);
         setBorrowings(parsed.borrowings || []);
         setFacilities(parsed.facilities || []);
@@ -106,6 +134,7 @@ export const PerkabProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     }
 
     // Default to sample data if first time
+    setUsers(INITIAL_USERS);
     setInventory(INITIAL_INVENTORY);
     setBorrowings(INITIAL_BORROWINGS);
     setFacilities(INITIAL_POSKO_FACILITIES);
@@ -122,6 +151,7 @@ export const PerkabProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       return;
     }
     const dataToSave = {
+      users,
       inventory,
       borrowings,
       facilities,
@@ -131,7 +161,7 @@ export const PerkabProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       maintenanceLogs,
     };
     localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(dataToSave));
-  }, [inventory, borrowings, facilities, rooms, eventSetups, transports, maintenanceLogs]);
+  }, [users, inventory, borrowings, facilities, rooms, eventSetups, transports, maintenanceLogs]);
 
   // Sync with Supabase if client is active
   useEffect(() => {
@@ -141,9 +171,20 @@ export const PerkabProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     // Async sync remote data if available
     async function syncRemote() {
       try {
+        const { data: userData } = await client!.from('users').select('*');
+        if (userData && userData.length > 0) {
+          const formattedUsers = userData.map((u: any) => ({
+            id: u.id,
+            name: u.name,
+            nim: u.nim,
+            role: u.role,
+            position: u.position,
+          }));
+          setUsers(formattedUsers);
+        }
+
         const { data: invData } = await client!.from('inventory').select('*');
         if (invData && invData.length > 0) {
-          // Format remote inventory
           const formatted = invData.map((d: any) => ({
             id: d.id,
             code: d.code,
@@ -167,6 +208,78 @@ export const PerkabProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     syncRemote();
   }, [supabaseConfig]);
 
+  // Auth Handlers
+  const login = (nameOrNim: string, nim: string): boolean => {
+    const query = nameOrNim.trim().toLowerCase();
+    const password = nim.trim();
+
+    const matchedUser = users.find(u => {
+      const matchName = u.name.trim().toLowerCase() === query;
+      const matchNim = u.nim.trim() === query;
+      const matchPass = u.nim.trim() === password;
+      return (matchName || matchNim) && matchPass;
+    });
+
+    if (matchedUser) {
+      setCurrentUser(matchedUser);
+      localStorage.setItem(SESSION_KEY, JSON.stringify(matchedUser));
+      return true;
+    }
+    return false;
+  };
+
+  const logout = () => {
+    setCurrentUser(null);
+    localStorage.removeItem(SESSION_KEY);
+  };
+
+  // User CRUD Handlers
+  const addUser = (newUser: Omit<UserAccount, 'id'>) => {
+    const id = `usr-${Date.now()}`;
+    const userItem: UserAccount = {
+      ...newUser,
+      id,
+    };
+    setUsers(prev => [...prev, userItem]);
+
+    const client = getSupabaseClient();
+    if (client) {
+      client.from('users').insert([{
+        id,
+        name: newUser.name,
+        nim: newUser.nim,
+        role: newUser.role,
+        position: newUser.position || null,
+      }]).then();
+    }
+  };
+
+  const updateUser = (updated: UserAccount) => {
+    setUsers(prev => prev.map(u => u.id === updated.id ? updated : u));
+    if (currentUser?.id === updated.id) {
+      setCurrentUser(updated);
+      localStorage.setItem(SESSION_KEY, JSON.stringify(updated));
+    }
+
+    const client = getSupabaseClient();
+    if (client) {
+      client.from('users').update({
+        name: updated.name,
+        nim: updated.nim,
+        role: updated.role,
+        position: updated.position || null,
+      }).eq('id', updated.id).then();
+    }
+  };
+
+  const deleteUser = (id: string) => {
+    setUsers(prev => prev.filter(u => u.id !== id));
+    const client = getSupabaseClient();
+    if (client) {
+      client.from('users').delete().eq('id', id).then();
+    }
+  };
+
   // Inventory Handlers
   const addInventoryItem = (item: Omit<InventoryItem, 'id' | 'code'>) => {
     const nextNum = inventory.length + 1;
@@ -182,7 +295,6 @@ export const PerkabProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
     setInventory(prev => [newItem, ...prev]);
 
-    // Push to Supabase if connected
     const client = getSupabaseClient();
     if (client) {
       client.from('inventory').insert([{
@@ -240,7 +352,6 @@ export const PerkabProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
     setBorrowings(prev => [newRecord, ...prev]);
 
-    // Decrease available qty if matched with inventory
     if (record.inventoryId) {
       setInventory(prev => prev.map(inv => {
         if (inv.id === record.inventoryId) {
@@ -277,7 +388,6 @@ export const PerkabProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     
     setBorrowings(prev => prev.map(bor => {
       if (bor.id === id) {
-        // Return available Qty in inventory if tied
         if (bor.inventoryId) {
           setInventory(invList => invList.map(inv => {
             if (inv.id === bor.inventoryId) {
@@ -291,7 +401,6 @@ export const PerkabProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           }));
         }
 
-        // If item returned damaged/lost, add automatically to maintenance logs!
         if (conditionOnReturn !== 'Bagus') {
           addMaintenanceLog({
             itemName: bor.itemName,
@@ -445,6 +554,7 @@ export const PerkabProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   const resetToSampleData = () => {
     localStorage.removeItem(LOCAL_STORAGE_KEY);
+    setUsers(INITIAL_USERS);
     setInventory(INITIAL_INVENTORY);
     setBorrowings(INITIAL_BORROWINGS);
     setFacilities(INITIAL_POSKO_FACILITIES);
@@ -464,6 +574,7 @@ export const PerkabProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     setMaintenanceLogs([]);
 
     const emptyData = {
+      users,
       inventory: [],
       borrowings: [],
       facilities: [],
@@ -495,6 +606,15 @@ export const PerkabProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   return (
     <PerkabContext.Provider
       value={{
+        currentUser,
+        login,
+        logout,
+
+        users,
+        addUser,
+        updateUser,
+        deleteUser,
+
         inventory,
         addInventoryItem,
         updateInventoryItem,

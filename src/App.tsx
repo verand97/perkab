@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { PerkabProvider, usePerkab } from './context/PerkabContext';
+import { LoginScreen } from './components/LoginScreen';
 import { Navbar } from './components/Navbar';
 import { Sidebar, TabType } from './components/Sidebar';
 import { DashboardView } from './components/DashboardView';
@@ -9,6 +10,7 @@ import { PoskoView } from './components/PoskoView';
 import { EventLogisticsView } from './components/EventLogisticsView';
 import { TransportView } from './components/TransportView';
 import { MaintenanceView } from './components/MaintenanceView';
+import { UserManagementView } from './components/UserManagementView';
 import { ExportModal } from './components/ExportModal';
 import { SettingsModal } from './components/SettingsModal';
 
@@ -18,11 +20,17 @@ const AppContent: React.FC = () => {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   const {
+    currentUser,
     inventory,
     borrowings,
     eventSetups,
     maintenanceLogs,
   } = usePerkab();
+
+  // If not logged in, render sleek Login Screen
+  if (!currentUser) {
+    return <LoginScreen />;
+  }
 
   const activeBorrowingsCount = borrowings.filter(b => b.status === 'Dipinjam').length;
   const upcomingEventsCount = eventSetups.filter(e => e.setupStatus !== 'Selesai').length;
@@ -72,6 +80,8 @@ const AppContent: React.FC = () => {
           {activeTab === 'transport' && <TransportView />}
 
           {activeTab === 'maintenance' && <MaintenanceView />}
+
+          {activeTab === 'users' && <UserManagementView />}
         </section>
       </main>
 
@@ -82,7 +92,7 @@ const AppContent: React.FC = () => {
             <strong>Perkab System</strong> — Perlengkapan, Akomodasi & Logistik Kelompok KKN 2026
           </div>
           <div className="text-[11px] text-slate-400">
-            Export Format: <span className="text-emerald-400 font-semibold">.XLSX (Multi-Tab)</span> & <span className="text-teal-400 font-semibold">.CSV</span>
+            User Aktif: <strong className="text-emerald-400 font-semibold capitalize">{currentUser.name}</strong> ({currentUser.role})
           </div>
         </div>
       </footer>
