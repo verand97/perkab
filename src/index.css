@@ -7,15 +7,29 @@
     --font-mono: 'JetBrains Mono', monospace;
   }
 
-  body {
+  /* Dark Theme Default */
+  html.dark body {
     background-color: #030712;
     color: #f8fafc;
+    background-image: 
+      radial-gradient(at 0% 0%, rgba(16, 185, 129, 0.06) 0px, transparent 50%),
+      radial-gradient(at 100% 100%, rgba(20, 184, 166, 0.05) 0px, transparent 50%);
+  }
+
+  /* Light Theme */
+  html.light body {
+    background-color: #f1f5f9;
+    color: #0f172a;
+    background-image: 
+      radial-gradient(at 0% 0%, rgba(16, 185, 129, 0.08) 0px, transparent 50%),
+      radial-gradient(at 100% 100%, rgba(20, 184, 166, 0.06) 0px, transparent 50%);
+  }
+
+  body {
     font-family: var(--font-sans);
     min-height: 100vh;
-    background-image: 
-      radial-gradient(at 0% 0%, rgba(16, 185, 129, 0.05) 0px, transparent 50%),
-      radial-gradient(at 100% 100%, rgba(20, 184, 166, 0.04) 0px, transparent 50%);
     background-attachment: fixed;
+    transition: background-color 0.25s ease, color 0.25s ease;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
@@ -34,40 +48,146 @@
   width: 6px;
   height: 6px;
 }
-::-webkit-scrollbar-track {
+
+html.dark ::-webkit-scrollbar-track {
   background: rgba(3, 7, 18, 0.8);
 }
-::-webkit-scrollbar-thumb {
+html.dark ::-webkit-scrollbar-thumb {
   background: rgba(30, 41, 59, 0.9);
   border-radius: 9999px;
 }
-::-webkit-scrollbar-thumb:hover {
-  background: rgba(51, 65, 85, 1);
+
+html.light ::-webkit-scrollbar-track {
+  background: rgba(241, 245, 249, 0.8);
+}
+html.light ::-webkit-scrollbar-thumb {
+  background: rgba(203, 213, 225, 0.9);
+  border-radius: 9999px;
 }
 
 /* Bespoke Glassmorphism Card System */
-.glass-card {
-  background: rgba(15, 23, 42, 0.65);
+html.dark .glass-card {
+  background: rgba(15, 23, 42, 0.75);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+}
+
+html.light .glass-card {
+  background: #ffffff;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid #cbd5e1;
+  box-shadow: 0 4px 20px -5px rgba(0, 0, 0, 0.05);
 }
 
 .glass-card-hover {
   transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
-.glass-card-hover:hover {
-  background: rgba(15, 23, 42, 0.8);
-  border-color: rgba(52, 211, 153, 0.25);
-  box-shadow: 0 20px 40px -15px rgba(16, 185, 129, 0.12);
+
+html.dark .glass-card-hover:hover {
+  background: rgba(15, 23, 42, 0.9);
+  border-color: rgba(52, 211, 153, 0.3);
+  box-shadow: 0 20px 40px -15px rgba(16, 185, 129, 0.15);
   transform: translateY(-2px);
 }
 
-.glass-pill {
-  background: rgba(30, 41, 59, 0.6);
-  backdrop-filter: blur(8px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+html.light .glass-card-hover:hover {
+  background: #ffffff;
+  border-color: rgba(16, 185, 129, 0.5);
+  box-shadow: 0 12px 30px -10px rgba(16, 185, 129, 0.15);
+  transform: translateY(-2px);
+}
+
+/* Light Theme Contrast Overrides for UI text inside white glass-cards */
+html.light .glass-card {
+  color: #0f172a;
+}
+
+html.light .glass-card .text-white {
+  color: #0f172a;
+}
+
+html.light .glass-card .text-slate-100 {
+  color: #0f172a;
+}
+
+html.light .glass-card .text-slate-200 {
+  color: #1e293b;
+}
+
+html.light .glass-card .text-slate-300 {
+  color: #334155;
+}
+
+html.light .glass-card .text-slate-400 {
+  color: #475569;
+}
+
+html.light .glass-card .text-slate-500 {
+  color: #64748b;
+}
+
+html.light .glass-card .bg-slate-900 {
+  background-color: #f1f5f9;
+  border-color: #cbd5e1;
+}
+
+html.light .glass-card .bg-slate-950 {
+  background-color: #f8fafc;
+  border-color: #cbd5e1;
+}
+
+html.light .glass-card .bg-slate-800 {
+  background-color: #e2e8f0;
+  border-color: #cbd5e1;
+}
+
+html.light .glass-card .border-slate-800 {
+  border-color: #cbd5e1;
+}
+
+html.light .glass-card .border-slate-700 {
+  border-color: #cbd5e1;
+}
+
+/* Hero Banner Dark Box Exception (keep white text inside dark hero box) */
+html.light .hero-banner {
+  background: linear-gradient(135deg, #0f172a 0%, #064e3b 100%) !important;
+  border-color: #047857 !important;
+  color: #ffffff !important;
+}
+
+html.light .hero-banner * {
+  color: #ffffff !important;
+}
+
+html.light .hero-banner .text-slate-400 {
+  color: #cbd5e1 !important;
+}
+
+html.light .hero-banner .text-emerald-400 {
+  color: #34d399 !important;
+}
+
+/* Primary Accent Buttons (retain white text in light mode) */
+html.light button.bg-emerald-600,
+html.light button.bg-emerald-500,
+html.light button.bg-teal-600,
+html.light button.bg-amber-600,
+html.light button.bg-indigo-600,
+html.light button.bg-rose-600 {
+  color: #ffffff !important;
+}
+
+html.light button.bg-emerald-600 *,
+html.light button.bg-emerald-500 *,
+html.light button.bg-teal-600 *,
+html.light button.bg-amber-600 *,
+html.light button.bg-indigo-600 *,
+html.light button.bg-rose-600 * {
+  color: #ffffff !important;
 }
 
 /* Print Styles for QR Tag Labels */

@@ -12,6 +12,7 @@ import {
   ToastMessage,
   ToastType,
   ConfirmDialogOptions,
+  ThemeMode,
 } from '../types';
 import {
   INITIAL_INVENTORY,
@@ -31,6 +32,10 @@ import {
 } from '../lib/supabase';
 
 interface PerkabContextType {
+  // Theme Mode
+  themeMode: ThemeMode;
+  toggleTheme: () => void;
+
   // Auth & Session
   currentUser: UserAccount | null;
   login: (nameOrNim: string, nim: string) => boolean;
@@ -98,8 +103,29 @@ const PerkabContext = createContext<PerkabContextType | undefined>(undefined);
 
 const LOCAL_STORAGE_KEY = 'perkab_app_data_v1';
 const SESSION_KEY = 'perkab_session_user';
+const THEME_STORAGE_KEY = 'perkab_theme';
 
 export const PerkabProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  // Theme Mode State
+  const [themeMode, setThemeMode] = useState<ThemeMode>(() => {
+    const saved = localStorage.getItem(THEME_STORAGE_KEY);
+    return (saved === 'light' || saved === 'dark') ? saved : 'dark';
+  });
+
+  useEffect(() => {
+    document.documentElement.classList.remove('dark', 'light');
+    document.documentElement.classList.add(themeMode);
+    localStorage.setItem(THEME_STORAGE_KEY, themeMode);
+  }, [themeMode]);
+
+  const toggleTheme = () => {
+    setThemeMode(prev => {
+      const next = prev === 'dark' ? 'light' : 'dark';
+      showToast(`Mode ${next === 'dark' ? 'Gelap (Dark)' : 'Terang (Light)'} Aktif`, 'info');
+      return next;
+    });
+  };
+
   // Toast & Confirm System State
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
   const [confirmOptions, setConfirmOptions] = useState<ConfirmDialogOptions | null>(null);
@@ -107,9 +133,8 @@ export const PerkabProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const showToast = (message: string, type: ToastType = 'info', title?: string) => {
     const id = `tst-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
     const newToast: ToastMessage = { id, message, type, title };
-    setToasts(prev => [newToast, ...prev].slice(0, 5)); // Keep max 5 toasts
+    setToasts(prev => [newToast, ...prev].slice(0, 5));
 
-    // Auto dismiss after 3.5 seconds
     setTimeout(() => {
       removeToast(id);
     }, 3500);
@@ -171,7 +196,6 @@ export const PerkabProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       }
     }
 
-    // Default to sample data if first time
     setUsers(INITIAL_USERS);
     setInventory(INITIAL_INVENTORY);
     setBorrowings(INITIAL_BORROWINGS);
@@ -182,7 +206,7 @@ export const PerkabProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     setMaintenanceLogs(INITIAL_MAINTENANCE_LOGS);
   }, []);
 
-  // Save to localStorage on state change (after mount)
+  // Save to localStorage on state change
   useEffect(() => {
     if (!isMounted.current) {
       isMounted.current = true;
@@ -201,7 +225,7 @@ export const PerkabProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(dataToSave));
   }, [users, inventory, borrowings, facilities, rooms, eventSetups, transports, maintenanceLogs]);
 
-  // Sync with Supabase if client is active
+  // Sync with Supabase if active
   useEffect(() => {
     const client = getSupabaseClient();
     if (!client) return;
@@ -671,6 +695,9 @@ export const PerkabProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   return (
     <PerkabContext.Provider
       value={{
+        themeMode,
+        toggleTheme,
+
         currentUser,
         login,
         logout,

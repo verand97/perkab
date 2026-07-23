@@ -55,7 +55,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigate, onOpen
   return (
     <div className="space-y-6">
       {/* Hero Banner Header */}
-      <div className="glass-card rounded-3xl p-6 lg:p-8 border border-slate-800 relative overflow-hidden">
+      <div className="glass-card hero-banner rounded-3xl p-6 lg:p-8 border border-slate-800 relative overflow-hidden">
         <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
           <div className="space-y-2">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-xs font-bold font-heading">
@@ -80,9 +80,9 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigate, onOpen
             </button>
             <button
               onClick={onOpenExport}
-              className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-800 text-xs font-bold transition-all"
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-950/80 hover:bg-emerald-900/90 text-emerald-200 border border-emerald-400/60 text-xs font-extrabold shadow-lg shadow-emerald-950/50 active:scale-95 transition-all"
             >
-              <FileSpreadsheet className="w-4 h-4 text-emerald-400" />
+              <FileSpreadsheet className="w-4.5 h-4.5 text-emerald-400" />
               <span>Download Rekap Excel</span>
             </button>
           </div>

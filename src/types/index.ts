@@ -148,3 +148,5 @@ export interface ConfirmDialogOptions {
   danger?: boolean;
   onConfirm: () => void;
 }
+
+export type ThemeMode = 'dark' | 'light';

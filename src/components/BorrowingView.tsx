@@ -12,6 +12,7 @@ import {
   X,
   FileSpreadsheet,
   Trash2,
+  Package,
 } from 'lucide-react';
 import { usePerkab } from '../context/PerkabContext';
 import { BorrowingRecord, BorrowingStatus, ReturnCondition } from '../types';
@@ -110,56 +111,56 @@ export const BorrowingView: React.FC = () => {
     });
   };
 
-  const handleSelectInventory = (invId: string) => {
-    const matched = inventory.find(i => i.id === invId);
-    if (matched) {
+  const handleSelectInventoryItem = (invId: string) => {
+    const found = inventory.find(i => i.id === invId);
+    if (found) {
       setFormData(prev => ({
         ...prev,
-        inventoryId: matched.id,
-        itemName: matched.name,
-        lenderName: matched.lenderName || prev.lenderName,
+        inventoryId: invId,
+        itemName: found.name,
+        lenderName: found.ownership === 'Kelompok' ? 'Gudang Posko KKN' : (found.lenderName || 'Warga Desa'),
       }));
     }
   };
 
   const handleExportCSV = () => {
-    const data = filteredBorrowings.map(b => ({
+    const exportData = filteredBorrowings.map(b => ({
       'Nama Barang': b.itemName,
-      'Pemberi Pinjaman': b.lenderName,
-      'No. WA Pemilik': b.lenderPhone,
-      'PJ Anggota KKN': b.borrowerName,
+      'Pemilik / Asal': b.lenderName,
+      'No. HP Pemilik': b.lenderPhone || '-',
+      'Penanggung Jawab / Peminjam': b.borrowerName,
+      'Tanggal Pinjam': b.borrowDate,
+      'Tenggat Kembali': b.dueDate,
+      'Tanggal Dikembalikan': b.returnDate || '-',
       'Jumlah': b.quantity,
-      'Tgl Pinjam': b.borrowDate,
-      'Tenggat Pengembalian': b.dueDate,
-      'Tgl Kembali': b.returnDate || '-',
-      'Deposit/Sewa (Rp)': b.depositCost,
+      'Biaya Deposit': b.depositCost,
       'Status': b.status,
       'Kondisi Kembali': b.conditionOnReturn || '-',
       'Catatan': b.notes || '-',
     }));
-    exportToCSV(data, 'Peminjaman_Alat');
+    exportToCSV(exportData, 'Peminjaman_Alat_Logistik');
   };
 
   return (
     <div className="space-y-6">
-      {/* Header */}
+      {/* Header Bar */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-extrabold text-white tracking-tight flex items-center gap-2">
+          <h2 className="text-2xl font-black text-white dark:text-white light:text-slate-900 tracking-tight flex items-center gap-2 font-heading">
             <Handshake className="w-6 h-6 text-amber-400" />
-            <span>Pengadaan & Peminjaman Alat</span>
+            <span>Peminjaman Alat & Logistik</span>
           </h2>
-          <p className="text-xs text-slate-400 mt-1">
-            Pencatatan peminjaman alat dari Warga Desa, Kampus, atau Sewa beserta tenggat pengembaliannya
+          <p className="text-xs text-slate-400 light:text-slate-500 mt-1">
+            Pencatatan pinjam-meminjam peralatan dengan warga desa, sekolah, balai desa, atau kampus
           </p>
         </div>
 
         <div className="flex items-center gap-2">
           <button
             onClick={handleExportCSV}
-            className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-semibold transition-all"
+            className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-slate-900 dark:bg-slate-900 light:bg-white text-slate-200 dark:text-slate-200 light:text-slate-800 border border-slate-800 dark:border-slate-800 light:border-slate-300 text-xs font-bold transition-all shadow-sm"
           >
-            <FileSpreadsheet className="w-4 h-4 text-emerald-400" />
+            <FileSpreadsheet className="w-4 h-4 text-amber-400" />
             <span>Export CSV</span>
           </button>
 
@@ -168,169 +169,175 @@ export const BorrowingView: React.FC = () => {
               resetForm();
               setIsAddModalOpen(true);
             }}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-white text-xs font-bold shadow-md shadow-amber-600/20 transition-all"
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-white text-xs font-extrabold shadow-md shadow-amber-600/20 active:scale-95 transition-all"
           >
             <Plus className="w-4 h-4" />
-            <span>Catat Pinjaman Baru</span>
+            <span>Catat Peminjaman Baru</span>
           </button>
         </div>
       </div>
 
-      {/* Filter Tabs & Search */}
-      <div className="glass-panel rounded-2xl p-4 flex flex-col md:flex-row items-center justify-between gap-4">
-        <div className="flex items-center gap-2 w-full md:w-auto">
-          <button
-            onClick={() => setActiveTab('DIPINJAM')}
-            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
-              activeTab === 'DIPINJAM'
-                ? 'bg-amber-500 text-white shadow-lg shadow-amber-500/20'
-                : 'bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-slate-200'
-            }`}
-          >
-            Masih Dipinjam ({activeCount})
-          </button>
-          <button
-            onClick={() => setActiveTab('DIKEMBALIKAN')}
-            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
-              activeTab === 'DIKEMBALIKAN'
-                ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/20'
-                : 'bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-slate-200'
-            }`}
-          >
-            Sudah Dikembalikan ({returnedCount})
-          </button>
-          <button
-            onClick={() => setActiveTab('ALL')}
-            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
-              activeTab === 'ALL'
-                ? 'bg-slate-700 text-white'
-                : 'bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-slate-200'
-            }`}
-          >
-            Semua ({borrowings.length})
-          </button>
-        </div>
+      {/* Tabs & Search Filter */}
+      <div className="glass-card rounded-2xl p-4 space-y-4 border border-slate-800 dark:border-slate-800 light:border-slate-200">
+        <div className="flex flex-col md:flex-row gap-3 items-center justify-between">
+          {/* Tab Buttons */}
+          <div className="flex items-center gap-2 w-full md:w-auto">
+            <button
+              onClick={() => setActiveTab('DIPINJAM')}
+              className={`px-4 py-2 rounded-xl text-xs font-extrabold transition-all flex items-center gap-2 ${
+                activeTab === 'DIPINJAM'
+                  ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20'
+                  : 'bg-slate-900 dark:bg-slate-900 light:bg-slate-100 text-slate-400 light:text-slate-600 border border-slate-800 dark:border-slate-800 light:border-slate-200'
+              }`}
+            >
+              <Clock className="w-3.5 h-3.5" />
+              <span>Sedang Dipinjam ({activeCount})</span>
+            </button>
 
-        <div className="relative w-full md:w-72">
-          <Search className="w-4 h-4 absolute left-3.5 top-3 text-slate-400" />
-          <input
-            type="text"
-            placeholder="Cari alat / nama pemilik..."
-            value={searchQuery}
-            onChange={e => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 rounded-xl bg-slate-800/80 border border-slate-700 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-amber-500"
-          />
+            <button
+              onClick={() => setActiveTab('DIKEMBALIKAN')}
+              className={`px-4 py-2 rounded-xl text-xs font-extrabold transition-all flex items-center gap-2 ${
+                activeTab === 'DIKEMBALIKAN'
+                  ? 'bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/20'
+                  : 'bg-slate-900 dark:bg-slate-900 light:bg-slate-100 text-slate-400 light:text-slate-600 border border-slate-800 dark:border-slate-800 light:border-slate-200'
+              }`}
+            >
+              <CheckCircle2 className="w-3.5 h-3.5" />
+              <span>Sudah Dikembalikan ({returnedCount})</span>
+            </button>
+
+            <button
+              onClick={() => setActiveTab('ALL')}
+              className={`px-4 py-2 rounded-xl text-xs font-extrabold transition-all ${
+                activeTab === 'ALL'
+                  ? 'bg-slate-700 text-white shadow-md'
+                  : 'bg-slate-900 dark:bg-slate-900 light:bg-slate-100 text-slate-400 light:text-slate-600 border border-slate-800 dark:border-slate-800 light:border-slate-200'
+              }`}
+            >
+              Semua ({borrowings.length})
+            </button>
+          </div>
+
+          {/* Search Box */}
+          <div className="relative w-full md:w-80">
+            <Search className="w-4 h-4 absolute left-3.5 top-3 text-slate-400" />
+            <input
+              type="text"
+              placeholder="Cari nama barang, peminjam, atau pemilik..."
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 rounded-xl bg-slate-900 dark:bg-slate-900 light:bg-white border border-slate-800 dark:border-slate-800 light:border-slate-300 text-xs text-slate-100 dark:text-slate-100 light:text-slate-900 placeholder-slate-500 focus:outline-none focus:border-amber-500"
+            />
+          </div>
         </div>
       </div>
 
-      {/* Cards Grid */}
+      {/* Borrowing Cards Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {filteredBorrowings.map(bor => {
-          const isOverdue = bor.status === 'Dipinjam' && new Date(bor.dueDate) < new Date(new Date().setHours(0,0,0,0));
-          const cleanPhone = bor.lenderPhone.replace(/[^0-9]/g, '');
+          const isOverdue =
+            bor.status === 'Dipinjam' &&
+            new Date(bor.dueDate) < new Date(new Date().setHours(0, 0, 0, 0));
 
           return (
             <div
               key={bor.id}
-              className={`glass-panel rounded-2xl p-5 border transition-all space-y-4 flex flex-col justify-between ${
+              className={`glass-card glass-card-hover rounded-2xl p-5 border space-y-4 flex flex-col justify-between ${
                 isOverdue
                   ? 'border-rose-500/50 bg-rose-950/20'
                   : bor.status === 'Dikembalikan'
-                  ? 'border-slate-800 opacity-80'
-                  : 'border-slate-800 hover:border-amber-500/40'
+                  ? 'border-emerald-500/30 bg-emerald-950/10'
+                  : 'border-slate-800 dark:border-slate-800 light:border-slate-200'
               }`}
             >
               <div className="space-y-3">
-                {/* Status & Badge */}
-                <div className="flex items-center justify-between">
+                {/* Header */}
+                <div className="flex items-start justify-between gap-2">
+                  <div>
+                    <span className="text-[10px] font-extrabold text-amber-400 uppercase tracking-wider font-heading">
+                      Peminjaman Logistik
+                    </span>
+                    <h3 className="text-base font-black text-white dark:text-white light:text-slate-900 font-heading leading-snug">
+                      {bor.itemName}
+                    </h3>
+                  </div>
+
                   <span
-                    className={`px-3 py-1 rounded-full text-[11px] font-extrabold border ${
-                      bor.status === 'Dikembalikan'
-                        ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
-                        : isOverdue
-                        ? 'bg-rose-500/20 text-rose-300 border-rose-500/30 animate-pulse'
-                        : 'bg-amber-500/20 text-amber-300 border-amber-500/30'
+                    className={`px-2.5 py-1 rounded-full text-[10px] font-extrabold border shrink-0 ${
+                      isOverdue
+                        ? 'bg-rose-500/20 text-rose-300 border-rose-500/40 animate-pulse'
+                        : bor.status === 'Dikembalikan'
+                        ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
+                        : 'bg-amber-500/20 text-amber-300 border-amber-500/40'
                     }`}
                   >
-                    {bor.status === 'Dikembalikan'
-                      ? 'SUDAH DIKEMBALIKAN'
-                      : isOverdue
-                      ? 'TERLAMBAT'
-                      : 'SEDANG DIPINJAM'}
-                  </span>
-
-                  <span className="font-mono text-xs font-bold text-slate-300 bg-slate-800 px-2 py-0.5 rounded border border-slate-700">
-                    {bor.quantity}x
+                    {isOverdue ? 'Terlambat' : bor.status}
                   </span>
                 </div>
 
-                {/* Item Name */}
-                <div>
-                  <h3 className="text-base font-extrabold text-white">{bor.itemName}</h3>
-                  <div className="text-xs text-slate-400 mt-1">
-                    PJ Anggota KKN: <strong className="text-slate-200">{bor.borrowerName}</strong>
+                {/* Info List */}
+                <div className="space-y-1.5 text-xs text-slate-300 dark:text-slate-300 light:text-slate-700 bg-slate-900/60 dark:bg-slate-900/60 light:bg-slate-100 p-3 rounded-xl border border-slate-800/80 dark:border-slate-800/80 light:border-slate-200">
+                  <div className="flex items-center justify-between">
+                    <span className="text-slate-400">Pemilik / Sumber:</span>
+                    <strong className="text-white dark:text-white light:text-slate-900">{bor.lenderName}</strong>
                   </div>
-                </div>
 
-                {/* Lender details box */}
-                <div className="p-3 rounded-xl bg-slate-800/80 border border-slate-700/60 text-xs space-y-1.5">
-                  <div className="flex items-center justify-between text-slate-300">
-                    <span className="text-slate-400">Pemilik:</span>
-                    <span className="font-bold text-amber-300">{bor.lenderName}</span>
+                  <div className="flex items-center justify-between">
+                    <span className="text-slate-400">Penanggung Jawab:</span>
+                    <strong className="text-amber-400 font-semibold">{bor.borrowerName}</strong>
                   </div>
-                  <div className="flex items-center justify-between text-slate-300">
-                    <span className="text-slate-400">Kontak WA:</span>
-                    <a
-                      href={`https://wa.me/${cleanPhone}`}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="font-mono text-emerald-400 hover:underline flex items-center gap-1"
-                    >
-                      <PhoneCall className="w-3 h-3" />
-                      <span>{bor.lenderPhone}</span>
-                    </a>
+
+                  <div className="flex items-center justify-between">
+                    <span className="text-slate-400">Jumlah Unit:</span>
+                    <strong className="font-mono text-emerald-400 font-bold">{bor.quantity} Unit</strong>
                   </div>
                 </div>
 
                 {/* Dates */}
-                <div className="grid grid-cols-2 gap-2 text-[11px] pt-1">
-                  <div className="p-2 rounded-lg bg-slate-800/40 text-slate-400">
-                    <span className="block text-[10px] uppercase text-slate-500">Tgl Pinjam</span>
-                    <span className="font-semibold text-slate-200">{bor.borrowDate}</span>
+                <div className="grid grid-cols-2 gap-2 text-[11px]">
+                  <div className="p-2 rounded-xl bg-slate-900/40 dark:bg-slate-900/40 light:bg-slate-100 text-slate-400">
+                    <span className="block text-[9px] uppercase font-bold text-slate-500">Tgl Pinjam</span>
+                    <span className="font-semibold text-slate-200 dark:text-slate-200 light:text-slate-800 font-mono">{bor.borrowDate}</span>
                   </div>
 
                   <div
-                    className={`p-2 rounded-lg ${
-                      isOverdue ? 'bg-rose-950/60 text-rose-300' : 'bg-slate-800/40 text-slate-400'
+                    className={`p-2 rounded-xl ${
+                      isOverdue ? 'bg-rose-950/60 text-rose-300' : 'bg-slate-900/40 dark:bg-slate-900/40 light:bg-slate-100 text-slate-400'
                     }`}
                   >
-                    <span className="block text-[10px] uppercase text-slate-500">Tenggat Kembali</span>
-                    <span className="font-bold">{bor.dueDate}</span>
+                    <span className="block text-[9px] uppercase font-bold text-slate-500">Tenggat Kembali</span>
+                    <span className="font-bold font-mono text-slate-100 dark:text-slate-100 light:text-slate-900">{bor.dueDate}</span>
                   </div>
                 </div>
 
-                {bor.depositCost > 0 && (
-                  <div className="text-xs text-slate-400 flex items-center justify-between bg-slate-800/40 p-2 rounded-lg">
-                    <span>Biaya Sewa / Deposit:</span>
-                    <span className="font-bold text-emerald-400">
-                      Rp {bor.depositCost.toLocaleString('id-ID')}
-                    </span>
+                {bor.lenderPhone && (
+                  <div className="flex items-center justify-between p-2 rounded-xl bg-emerald-950/30 border border-emerald-500/20 text-xs">
+                    <span className="text-[11px] text-emerald-300 font-mono">{bor.lenderPhone}</span>
+                    <a
+                      href={`https://wa.me/${bor.lenderPhone.replace(/[^0-9]/g, '')}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-[10px] font-bold shadow"
+                    >
+                      <PhoneCall className="w-3 h-3" />
+                      <span>Kontak WA</span>
+                    </a>
                   </div>
                 )}
 
                 {bor.notes && (
-                  <p className="text-[11px] text-slate-400 bg-slate-900/50 p-2 rounded-lg italic">
+                  <p className="text-[11px] text-slate-400 italic bg-slate-900/40 p-2 rounded-lg">
                     "{bor.notes}"
                   </p>
                 )}
               </div>
 
               {/* Actions Footer */}
-              <div className="pt-3 border-t border-slate-800/80 flex items-center justify-between gap-2">
+              <div className="pt-3 border-t border-slate-800/80 flex items-center justify-between gap-2 mt-2">
                 {bor.status === 'Dipinjam' ? (
                   <button
                     onClick={() => setReturningItem(bor)}
-                    className="w-full flex items-center justify-center gap-2 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-md"
+                    className="w-full flex items-center justify-center gap-2 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-md active:scale-95 transition-all"
                   >
                     <RotateCcw className="w-3.5 h-3.5" />
                     <span>Kembalikan Barang</span>
@@ -338,7 +345,7 @@ export const BorrowingView: React.FC = () => {
                 ) : (
                   <div className="text-xs text-emerald-400 flex items-center gap-1.5 font-semibold py-1">
                     <CheckCircle2 className="w-4 h-4" />
-                    <span>Kembali tgl {bor.returnDate} ({bor.conditionOnReturn})</span>
+                    <span>Kembali {bor.returnDate} ({bor.conditionOnReturn})</span>
                   </div>
                 )}
 
@@ -352,7 +359,7 @@ export const BorrowingView: React.FC = () => {
                       onConfirm: () => deleteBorrowingRecord(bor.id),
                     });
                   }}
-                  className="p-2 rounded-xl bg-slate-800 hover:bg-rose-900/60 text-slate-400 hover:text-rose-300 border border-slate-700"
+                  className="p-2 rounded-xl bg-slate-900 dark:bg-slate-900 light:bg-slate-100 hover:bg-rose-950/60 text-slate-400 hover:text-rose-300 border border-slate-800 dark:border-slate-800 light:border-slate-300"
                   title="Hapus Record"
                 >
                   <Trash2 className="w-3.5 h-3.5" />
@@ -363,150 +370,138 @@ export const BorrowingView: React.FC = () => {
         })}
 
         {filteredBorrowings.length === 0 && (
-          <div className="col-span-full py-12 text-center text-slate-500 glass-panel rounded-2xl">
-            Tidak ada catatan peminjaman barang yang sesuai.
+          <div className="col-span-full glass-card rounded-2xl py-12 text-center text-slate-500 text-xs">
+            Belum ada record peminjaman yang sesuai. Klik "+ Catat Peminjaman Baru" untuk memasukkan data.
           </div>
         )}
       </div>
 
       {/* Modal Add Borrowing */}
       {isAddModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
-          <div className="glass-panel w-full max-w-lg rounded-2xl p-6 border border-slate-700 shadow-2xl space-y-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
+          <div className="glass-card w-full max-w-lg rounded-3xl p-6 border border-slate-700 shadow-2xl space-y-4">
             <div className="flex items-center justify-between pb-3 border-b border-slate-800">
-              <h3 className="text-lg font-extrabold text-white">Catat Peminjaman Alat Baru</h3>
+              <h3 className="text-lg font-black text-white font-heading">
+                Catat Peminjaman Alat Logistik Baru
+              </h3>
               <button onClick={() => setIsAddModalOpen(false)} className="p-1 text-slate-400 hover:text-white">
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <form onSubmit={handleAddSubmit} className="space-y-3.5 text-xs">
-              {/* Optional Link to Existing Inventory */}
+            <form onSubmit={handleAddSubmit} className="space-y-4 text-xs">
               <div>
-                <label className="block font-semibold text-slate-300 mb-1">
-                  Pilih dari Katalog Inventaris (Opsional)
-                </label>
+                <label className="block font-bold text-slate-300 mb-1">Pilih Dari Inventaris Posko (Opsional)</label>
                 <select
-                  onChange={e => handleSelectInventory(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-slate-200 focus:outline-none focus:border-amber-500"
+                  value={formData.inventoryId}
+                  onChange={e => handleSelectInventoryItem(e.target.value)}
+                  className="w-full px-3 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-100 focus:outline-none focus:border-amber-500 font-semibold"
                 >
-                  <option value="">-- Pilih Barang dari Logistik (atau Ketik Manual) --</option>
+                  <option value="">-- Pilih dari Katalog Inventaris --</option>
                   {inventory.map(inv => (
                     <option key={inv.id} value={inv.id}>
-                      {inv.name} ({inv.code}) - {inv.lenderName || inv.ownership}
+                      {inv.code} - {inv.name} (Tersedia: {inv.availableQty} {inv.unit})
                     </option>
                   ))}
                 </select>
               </div>
 
               <div>
-                <label className="block font-semibold text-slate-300 mb-1">Nama Barang / Peralatan *</label>
+                <label className="block font-bold text-slate-300 mb-1">Nama Barang Dipinjam *</label>
                 <input
                   type="text"
                   required
-                  placeholder="Contoh: Sound System 500W / Proyektor Epson / Terpal"
+                  placeholder="Contoh: Proyektor Epson / Spanduk Selamat Datang"
                   value={formData.itemName}
                   onChange={e => setFormData({ ...formData, itemName: e.target.value })}
-                  className="w-full px-3.5 py-2 rounded-xl bg-slate-800 border border-slate-700 text-slate-100 focus:outline-none focus:border-amber-500"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-100 placeholder-slate-500 focus:outline-none focus:border-amber-500"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block font-semibold text-slate-300 mb-1">Pemberi Pinjaman (Pemilik) *</label>
+                  <label className="block font-bold text-slate-300 mb-1">Pemilik / Tempat Pinjam *</label>
                   <input
                     type="text"
                     required
-                    placeholder="Nama Warga / Kadus / Kampus"
+                    placeholder="Nama warga / Balai Desa / Kampus"
                     value={formData.lenderName}
                     onChange={e => setFormData({ ...formData, lenderName: e.target.value })}
-                    className="w-full px-3.5 py-2 rounded-xl bg-slate-800 border border-slate-700 text-slate-100 focus:outline-none focus:border-amber-500"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-100 placeholder-slate-500 focus:outline-none focus:border-amber-500"
                   />
                 </div>
 
                 <div>
-                  <label className="block font-semibold text-slate-300 mb-1">No. HP / WA Pemilik *</label>
+                  <label className="block font-bold text-slate-300 mb-1">No. HP / WA Pemilik</label>
                   <input
                     type="text"
-                    required
-                    placeholder="08123456789"
+                    placeholder="081234567890"
                     value={formData.lenderPhone}
                     onChange={e => setFormData({ ...formData, lenderPhone: e.target.value })}
-                    className="w-full px-3.5 py-2 rounded-xl bg-slate-800 border border-slate-700 text-slate-100 focus:outline-none focus:border-amber-500"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-100 font-mono placeholder-slate-500 focus:outline-none focus:border-amber-500"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block font-semibold text-slate-300 mb-1">PJ Anggota KKN *</label>
+                  <label className="block font-bold text-slate-300 mb-1">Penanggung Jawab / Peminjam *</label>
                   <input
                     type="text"
                     required
-                    placeholder="Nama anggota penanggungjawab"
+                    placeholder="Nama anggota kelompok KKN"
                     value={formData.borrowerName}
                     onChange={e => setFormData({ ...formData, borrowerName: e.target.value })}
-                    className="w-full px-3.5 py-2 rounded-xl bg-slate-800 border border-slate-700 text-slate-100 focus:outline-none focus:border-amber-500"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-100 placeholder-slate-500 focus:outline-none focus:border-amber-500"
                   />
                 </div>
 
                 <div>
-                  <label className="block font-semibold text-slate-300 mb-1">Jumlah Pinjam *</label>
+                  <label className="block font-bold text-slate-300 mb-1">Jumlah Unit *</label>
                   <input
                     type="number"
                     min="1"
                     required
                     value={formData.quantity}
                     onChange={e => setFormData({ ...formData, quantity: parseInt(e.target.value) || 1 })}
-                    className="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-slate-100 focus:outline-none focus:border-amber-500"
+                    className="w-full px-3 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-100 font-mono focus:outline-none focus:border-amber-500"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block font-semibold text-slate-300 mb-1">Tanggal Pinjam *</label>
+                  <label className="block font-bold text-slate-300 mb-1">Tanggal Pinjam *</label>
                   <input
                     type="date"
                     required
                     value={formData.borrowDate}
                     onChange={e => setFormData({ ...formData, borrowDate: e.target.value })}
-                    className="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-slate-100 focus:outline-none focus:border-amber-500"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-100 font-mono focus:outline-none focus:border-amber-500"
                   />
                 </div>
 
                 <div>
-                  <label className="block font-semibold text-slate-300 mb-1">Tenggat Pengembalian *</label>
+                  <label className="block font-bold text-slate-300 mb-1">Tenggat Kembali *</label>
                   <input
                     type="date"
                     required
                     value={formData.dueDate}
                     onChange={e => setFormData({ ...formData, dueDate: e.target.value })}
-                    className="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-slate-100 focus:outline-none focus:border-amber-500"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-100 font-mono focus:outline-none focus:border-amber-500"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block font-semibold text-slate-300 mb-1">Biaya Sewa / Deposit (Rp)</label>
+                <label className="block font-bold text-slate-300 mb-1">Biaya Deposit / Uang Muka (Rp)</label>
                 <input
                   type="number"
                   min="0"
-                  placeholder="0 jika gratis"
+                  placeholder="0"
                   value={formData.depositCost}
                   onChange={e => setFormData({ ...formData, depositCost: parseInt(e.target.value) || 0 })}
-                  className="w-full px-3.5 py-2 rounded-xl bg-slate-800 border border-slate-700 text-slate-100 focus:outline-none focus:border-amber-500"
-                />
-              </div>
-
-              <div>
-                <label className="block font-semibold text-slate-300 mb-1">Catatan Peminjaman</label>
-                <textarea
-                  rows={2}
-                  placeholder="Dipergunakan untuk acara apa / jaminan KTP dll..."
-                  value={formData.notes}
-                  onChange={e => setFormData({ ...formData, notes: e.target.value })}
-                  className="w-full px-3.5 py-2 rounded-xl bg-slate-800 border border-slate-700 text-slate-100 focus:outline-none focus:border-amber-500"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-100 font-mono focus:outline-none focus:border-amber-500"
                 />
               </div>
 
@@ -514,15 +509,15 @@ export const BorrowingView: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setIsAddModalOpen(false)}
-                  className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold"
+                  className="px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 font-semibold"
                 >
                   Batal
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-bold shadow-lg"
+                  className="px-5 py-2 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-extrabold shadow-lg shadow-amber-600/20"
                 >
-                  Simpan Pinjaman
+                  Simpan Peminjaman
                 </button>
               </div>
             </form>
@@ -532,72 +527,60 @@ export const BorrowingView: React.FC = () => {
 
       {/* Modal Return Item */}
       {returningItem && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
-          <div className="glass-panel w-full max-w-md rounded-2xl p-6 border border-slate-700 shadow-2xl space-y-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
+          <div className="glass-card w-full max-w-md rounded-3xl p-6 border border-slate-700 shadow-2xl space-y-4">
             <div className="flex items-center justify-between pb-3 border-b border-slate-800">
-              <h3 className="text-base font-extrabold text-white flex items-center gap-2">
-                <RotateCcw className="w-5 h-5 text-emerald-400" />
-                <span>Pengembalian Barang Pinjaman</span>
+              <h3 className="text-base font-black text-white font-heading">
+                Proses Pengembalian Barang
               </h3>
               <button onClick={() => setReturningItem(null)} className="p-1 text-slate-400 hover:text-white">
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <div className="p-3 rounded-xl bg-slate-800/80 border border-slate-700 text-xs space-y-1">
-              <div className="font-bold text-white">{returningItem.itemName} ({returningItem.quantity}x)</div>
-              <div className="text-slate-400">Dikembalikan kepada: <strong className="text-amber-300">{returningItem.lenderName}</strong></div>
-            </div>
-
             <form onSubmit={handleReturnSubmit} className="space-y-4 text-xs">
-              <div>
-                <label className="block font-semibold text-slate-300 mb-1.5">
-                  Kondisi Saat Pengembalian *
-                </label>
-                <div className="grid grid-cols-3 gap-2">
-                  {(['Bagus', 'Rusak', 'Hilang'] as ReturnCondition[]).map(cond => (
-                    <button
-                      key={cond}
-                      type="button"
-                      onClick={() => setReturnCondition(cond)}
-                      className={`py-2 rounded-xl text-xs font-bold border transition-all ${
-                        returnCondition === cond
-                          ? cond === 'Bagus'
-                            ? 'bg-emerald-600 text-white border-emerald-500'
-                            : 'bg-rose-600 text-white border-rose-500'
-                          : 'bg-slate-800 text-slate-400 border-slate-700 hover:bg-slate-700'
-                      }`}
-                    >
-                      {cond}
-                    </button>
-                  ))}
-                </div>
+              <div className="p-3 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-1">
+                <div className="font-extrabold text-white font-heading">{returningItem.itemName}</div>
+                <div className="text-slate-400">Pemilik: {returningItem.lenderName} ({returningItem.quantity} Unit)</div>
               </div>
 
               <div>
-                <label className="block font-semibold text-slate-300 mb-1">Catatan Pengembalian</label>
+                <label className="block font-bold text-slate-300 mb-1">Kondisi Barang Saat Dikembalikan *</label>
+                <select
+                  value={returnCondition}
+                  onChange={e => setReturnCondition(e.target.value as ReturnCondition)}
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-100 font-semibold focus:outline-none focus:border-emerald-500"
+                >
+                  <option value="Bagus">Bagus (Lengkap & Berfungsi Normal)</option>
+                  <option value="Rusak">Rusak (Perlu Perbaikan / Ganti Rugi)</option>
+                  <option value="Hilang">Hilang (Perlu Ganti Rugi)</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-300 mb-1">Catatan Pengembalian</label>
                 <textarea
                   rows={2}
-                  placeholder="Keterangan ucapan terima kasih / jika ada lecetan / info ganti rugi..."
+                  placeholder="Catatan penerimaan, ucapan terima kasih warga, dll..."
                   value={returnNotes}
                   onChange={e => setReturnNotes(e.target.value)}
-                  className="w-full px-3.5 py-2 rounded-xl bg-slate-800 border border-slate-700 text-slate-100 focus:outline-none focus:border-emerald-500"
+                  className="w-full px-3.5 py-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-100 focus:outline-none focus:border-emerald-500"
                 />
               </div>
 
-              <div className="flex items-center justify-end gap-3 pt-2">
+              <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-800">
                 <button
                   type="button"
                   onClick={() => setReturningItem(null)}
-                  className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold"
+                  className="px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 font-semibold"
                 >
                   Batal
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold shadow-lg"
+                  className="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold shadow-lg"
                 >
-                  Konfirmasi Kembali
+                  Konfirmasi Pengembalian
                 </button>
               </div>
             </form>

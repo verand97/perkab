@@ -13,6 +13,8 @@ import {
   CheckCircle2,
   AlertTriangle,
   X,
+  Layers,
+  Sparkles,
 } from 'lucide-react';
 import { usePerkab } from '../context/PerkabContext';
 import { PoskoFacility, PoskoRoomLayout, FacilityStatus } from '../types';
@@ -109,244 +111,243 @@ export const PoskoView: React.FC = () => {
     setEquipmentText('');
   };
 
+  const goodFacilityCount = facilities.filter(f => f.status === 'Sangat Baik').length;
+  const overallHealth = facilities.length > 0 ? Math.round((goodFacilityCount / facilities.length) * 100) : 100;
+
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <h2 className="text-2xl font-extrabold text-white tracking-tight flex items-center gap-2">
-          <Home className="w-6 h-6 text-teal-400" />
-          <span>Akomodasi & Kelayakan Posko KKN</span>
-        </h2>
-        <p className="text-xs text-slate-400 mt-1">
-          Pengecekan fasilitas harian (listrik, air, dapur, kamar) serta pengaturan tata letak tempat tinggal kelompok
-        </p>
+      {/* Header Bar */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h2 className="text-2xl font-black text-white dark:text-white light:text-slate-900 tracking-tight flex items-center gap-2 font-heading">
+            <Home className="w-6 h-6 text-teal-400" />
+            <span>Akomodasi & Kelayakan Posko KKN</span>
+          </h2>
+          <p className="text-xs text-slate-400 light:text-slate-500 mt-1">
+            Monitoring kelayakan listrik, air, sanitasi, dapur, serta pembagian tempat tidur & kamar posko
+          </p>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <div className="px-4 py-2 rounded-xl bg-teal-500/10 text-teal-400 border border-teal-500/20 text-xs font-bold font-heading">
+            Skor Kelayakan Posko: {overallHealth}%
+          </div>
+        </div>
       </div>
 
-      {/* Facilities Grid */}
+      {/* Facilities Health Section */}
       <div className="space-y-3">
-        <h3 className="text-sm font-bold text-slate-300 uppercase tracking-wider">
-          Status Fasilitas Utama Posko
+        <h3 className="text-sm font-black text-slate-300 dark:text-slate-300 light:text-slate-700 uppercase tracking-widest font-heading">
+          Status Fasilitas Utama Posko Tempat Tinggal:
         </h3>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {facilities.map(fac => (
             <div
               key={fac.id}
-              className="glass-panel rounded-2xl p-5 border border-slate-800 space-y-3 hover:border-teal-500/40 transition-colors"
+              className="glass-card glass-card-hover rounded-2xl p-5 border border-slate-800 dark:border-slate-800 light:border-slate-200 space-y-3 flex flex-col justify-between"
             >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="p-2.5 rounded-xl bg-slate-800 border border-slate-700">
-                    {getCategoryIcon(fac.category)}
+              <div className="space-y-2.5">
+                <div className="flex items-start justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2.5 rounded-xl bg-slate-900 dark:bg-slate-900 light:bg-slate-100 border border-slate-800 dark:border-slate-800 light:border-slate-200">
+                      {getCategoryIcon(fac.category)}
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-extrabold text-white dark:text-white light:text-slate-900 font-heading">
+                        {fac.facilityName}
+                      </h4>
+                      <span className="text-[10px] text-slate-400 font-semibold">{fac.category}</span>
+                    </div>
                   </div>
-                  <div>
-                    <h4 className="text-sm font-bold text-white">{fac.facilityName}</h4>
-                    <span className="text-[10px] text-slate-400">{fac.category}</span>
-                  </div>
+
+                  <span
+                    className={`px-2.5 py-1 rounded-full text-[10px] font-extrabold border ${
+                      fac.status === 'Sangat Baik'
+                        ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30'
+                        : fac.status === 'Perlu Perhatian'
+                        ? 'bg-amber-500/20 text-amber-300 border-amber-500/30'
+                        : 'bg-rose-500/20 text-rose-300 border-rose-500/30'
+                    }`}
+                  >
+                    {fac.status}
+                  </span>
+                </div>
+
+                <p className="text-xs text-slate-300 dark:text-slate-300 light:text-slate-600 bg-slate-900/60 dark:bg-slate-900/60 light:bg-slate-100 p-3 rounded-xl border border-slate-800/60 dark:border-slate-800/60 light:border-slate-200 leading-relaxed">
+                  {fac.details}
+                </p>
+              </div>
+
+              <div className="pt-3 border-t border-slate-800/80 dark:border-slate-800/80 light:border-slate-200 flex items-center justify-between text-xs">
+                <div className="text-[11px] text-slate-400">
+                  <span>PJ: </span>
+                  <strong className="text-slate-200 dark:text-slate-200 light:text-slate-800">{fac.picName}</strong>
                 </div>
 
                 <button
                   onClick={() => openFacilityModal(fac)}
-                  className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white"
-                  title="Update Status"
+                  className="px-3 py-1.5 rounded-xl bg-slate-900 dark:bg-slate-900 light:bg-slate-100 hover:bg-slate-800 text-teal-400 hover:text-teal-300 border border-slate-800 dark:border-slate-800 light:border-slate-300 text-[11px] font-bold transition-all"
                 >
-                  <Edit className="w-3.5 h-3.5" />
+                  Update Check
                 </button>
-              </div>
-
-              {/* Status pill */}
-              <div>
-                <span
-                  className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-extrabold border ${
-                    fac.status === 'Sangat Baik'
-                      ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30'
-                      : fac.status === 'Perlu Perhatian'
-                      ? 'bg-amber-500/15 text-amber-400 border-amber-500/30'
-                      : 'bg-rose-500/15 text-rose-400 border-rose-500/30'
-                  }`}
-                >
-                  {fac.status === 'Sangat Baik' ? (
-                    <CheckCircle2 className="w-3.5 h-3.5" />
-                  ) : (
-                    <AlertTriangle className="w-3.5 h-3.5" />
-                  )}
-                  <span>{fac.status}</span>
-                </span>
-              </div>
-
-              <p className="text-xs text-slate-300 leading-relaxed bg-slate-900/60 p-2.5 rounded-xl border border-slate-800">
-                {fac.details}
-              </p>
-
-              <div className="flex items-center justify-between text-[11px] text-slate-400 pt-1 border-t border-slate-800">
-                <span>Cek Terakhir: <strong>{fac.lastChecked}</strong></span>
-                <span>PIC: <strong className="text-teal-300">{fac.picName}</strong></span>
               </div>
             </div>
           ))}
         </div>
       </div>
 
-      {/* Room Layout & Capacity Section */}
-      <div className="space-y-4 pt-4 border-t border-slate-800">
+      {/* Room Layout & Bed Allocation Section */}
+      <div className="space-y-4 pt-4">
         <div className="flex items-center justify-between">
-          <div>
-            <h3 className="text-base font-bold text-white flex items-center gap-2">
-              <Users className="w-5 h-5 text-emerald-400" />
-              <span>Tata Letak Kamar & Pembagian Anggota</span>
-            </h3>
-            <p className="text-xs text-slate-400 mt-0.5">
-              Alokasi tempat tidur dan pembagian barang per ruangan di posko
-            </p>
-          </div>
+          <h3 className="text-sm font-black text-slate-300 dark:text-slate-300 light:text-slate-700 uppercase tracking-widest font-heading flex items-center gap-2">
+            <Bed className="w-4 h-4 text-indigo-400" />
+            <span>Tata Letak Kamar & Alokasi Tempat Tidur Anggota:</span>
+          </h3>
 
           <button
             onClick={() => {
               resetRoomForm();
               setIsAddRoomModalOpen(true);
             }}
-            className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-teal-600 hover:bg-teal-500 text-white text-xs font-bold shadow"
+            className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold shadow transition-all"
           >
             <Plus className="w-4 h-4" />
-            <span>Tambah Kamar/Ruang</span>
+            <span>Tambah Ruangan / Kamar</span>
           </button>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {rooms.map(room => (
             <div
               key={room.id}
-              className="glass-panel rounded-2xl p-5 border border-slate-800 space-y-4"
+              className="glass-card glass-card-hover rounded-2xl p-5 border border-slate-800 dark:border-slate-800 light:border-slate-200 space-y-4 flex flex-col justify-between"
             >
-              <div className="flex items-center justify-between">
-                <h4 className="text-base font-extrabold text-white">{room.roomName}</h4>
-                <button
-                  onClick={() => openEditRoomModal(room)}
-                  className="p-1 text-slate-400 hover:text-white"
-                >
-                  <Edit className="w-4 h-4" />
-                </button>
-              </div>
-
-              {room.capacity > 0 && (
-                <div className="text-xs text-slate-300">
-                  <span className="text-slate-400">Kapasitas: </span>
-                  <strong>{room.occupants.length} dari {room.capacity} Orang</strong>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-base font-black text-white dark:text-white light:text-slate-900 font-heading">
+                    {room.roomName}
+                  </h4>
+                  <span className="px-2.5 py-1 rounded-full text-[10px] font-mono font-bold bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+                    Kapasitas: {room.occupants.length} / {room.capacity} Orang
+                  </span>
                 </div>
-              )}
 
-              {/* Occupants tags */}
-              {room.occupants.length > 0 && (
-                <div>
-                  <span className="text-[10px] uppercase font-bold text-slate-400 block mb-1.5">
-                    Anggota Penghuni:
+                {/* Occupants List */}
+                <div className="space-y-1.5">
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider font-heading">
+                    Penghuni Kamar:
                   </span>
                   <div className="flex flex-wrap gap-1.5">
                     {room.occupants.map((occ, idx) => (
                       <span
                         key={idx}
-                        className="px-2.5 py-1 rounded-lg bg-slate-800 text-emerald-300 border border-slate-700 text-[11px]"
+                        className="px-2.5 py-1 rounded-xl bg-slate-900 dark:bg-slate-900 light:bg-slate-100 text-slate-200 dark:text-slate-200 light:text-slate-800 text-xs font-semibold border border-slate-800 dark:border-slate-800 light:border-slate-300 capitalize"
                       >
                         {occ}
                       </span>
                     ))}
+                    {room.occupants.length === 0 && (
+                      <span className="text-xs text-slate-500 italic">Belum ada penghuni</span>
+                    )}
                   </div>
                 </div>
-              )}
 
-              {/* Equipment list */}
-              {room.assignedEquipment.length > 0 && (
-                <div className="pt-2 border-t border-slate-800">
-                  <span className="text-[10px] uppercase font-bold text-slate-400 block mb-1.5">
-                    Fasilitas & Barang Terpasang:
+                {/* Assigned Equipment */}
+                <div className="space-y-1.5 pt-1">
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider font-heading">
+                    Fasilitas & Perangkat Kamar:
                   </span>
-                  <ul className="text-xs text-slate-300 space-y-1 list-disc list-inside">
+                  <div className="flex flex-wrap gap-1.5">
                     {room.assignedEquipment.map((eq, idx) => (
-                      <li key={idx} className="truncate">{eq}</li>
+                      <span
+                        key={idx}
+                        className="px-2 py-0.5 rounded-lg bg-indigo-950/40 text-indigo-300 text-[11px] border border-indigo-500/20 font-medium"
+                      >
+                        • {eq}
+                      </span>
                     ))}
-                  </ul>
+                  </div>
                 </div>
-              )}
+              </div>
+
+              <div className="pt-3 border-t border-slate-800/80 dark:border-slate-800/80 light:border-slate-200 flex justify-end">
+                <button
+                  onClick={() => openEditRoomModal(room)}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900 dark:bg-slate-900 light:bg-slate-100 hover:bg-slate-800 text-indigo-400 hover:text-indigo-300 border border-slate-800 dark:border-slate-800 light:border-slate-300 text-xs font-bold"
+                >
+                  <Edit className="w-3.5 h-3.5" />
+                  <span>Edit Layout</span>
+                </button>
+              </div>
             </div>
           ))}
         </div>
       </div>
 
-      {/* Modal Update Facility */}
+      {/* Facility Status Modal */}
       {editingFacility && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
-          <div className="glass-panel w-full max-w-md rounded-2xl p-6 border border-slate-700 shadow-2xl space-y-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
+          <div className="glass-card w-full max-w-md rounded-3xl p-6 border border-slate-700 shadow-2xl space-y-4">
             <div className="flex items-center justify-between pb-3 border-b border-slate-800">
-              <h3 className="text-base font-extrabold text-white">
-                Update Fasilitas: {editingFacility.facilityName}
+              <h3 className="text-base font-black text-white font-heading">
+                Update Kelayakan {editingFacility.facilityName}
               </h3>
               <button onClick={() => setEditingFacility(null)} className="p-1 text-slate-400 hover:text-white">
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <form onSubmit={handleUpdateFacilitySubmit} className="space-y-3.5 text-xs">
+            <form onSubmit={handleUpdateFacilitySubmit} className="space-y-4 text-xs">
               <div>
-                <label className="block font-semibold text-slate-300 mb-1">Status Kelayakan *</label>
-                <div className="grid grid-cols-3 gap-2">
-                  {(['Sangat Baik', 'Perlu Perhatian', 'Kerusakan'] as FacilityStatus[]).map(st => (
-                    <button
-                      key={st}
-                      type="button"
-                      onClick={() => setFacStatus(st)}
-                      className={`py-2 rounded-xl text-xs font-bold border transition-all ${
-                        facStatus === st
-                          ? st === 'Sangat Baik'
-                            ? 'bg-emerald-600 text-white border-emerald-500'
-                            : st === 'Perlu Perhatian'
-                            ? 'bg-amber-600 text-white border-amber-500'
-                            : 'bg-rose-600 text-white border-rose-500'
-                          : 'bg-slate-800 text-slate-400 border-slate-700 hover:bg-slate-700'
-                      }`}
-                    >
-                      {st}
-                    </button>
-                  ))}
-                </div>
+                <label className="block font-bold text-slate-300 mb-1">Status Kelayakan *</label>
+                <select
+                  value={facStatus}
+                  onChange={e => setFacStatus(e.target.value as FacilityStatus)}
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-100 font-semibold focus:outline-none focus:border-teal-500"
+                >
+                  <option value="Sangat Baik">Sangat Baik (Lancar & Berfungsi Full)</option>
+                  <option value="Perlu Perhatian">Perlu Perhatian (Ada Kendala Kecil)</option>
+                  <option value="Kerusakan">Kerusakan (Butuh Perbaikan Segera)</option>
+                </select>
               </div>
 
               <div>
-                <label className="block font-semibold text-slate-300 mb-1">Detail & Catatan Kondisi *</label>
+                <label className="block font-bold text-slate-300 mb-1">Keterangan / Rincian Kondisi *</label>
                 <textarea
                   rows={3}
                   required
-                  placeholder="Kondisi terkini air, token listrik, kasur..."
+                  placeholder="Contoh: Daya 1300 Watt aman, air jernih dari sumur desa..."
                   value={facDetails}
                   onChange={e => setFacDetails(e.target.value)}
-                  className="w-full px-3.5 py-2 rounded-xl bg-slate-800 border border-slate-700 text-slate-100 focus:outline-none focus:border-teal-500"
+                  className="w-full px-3.5 py-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-100 focus:outline-none focus:border-teal-500"
                 />
               </div>
 
               <div>
-                <label className="block font-semibold text-slate-300 mb-1">PIC Pemeriksa *</label>
+                <label className="block font-bold text-slate-300 mb-1">Penanggung Jawab (PJ) *</label>
                 <input
                   type="text"
                   required
-                  placeholder="Nama anggota yang memeriksa"
                   value={facPic}
                   onChange={e => setFacPic(e.target.value)}
-                  className="w-full px-3.5 py-2 rounded-xl bg-slate-800 border border-slate-700 text-slate-100 focus:outline-none focus:border-teal-500"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-100 focus:outline-none focus:border-teal-500"
                 />
               </div>
 
-              <div className="flex items-center justify-end gap-3 pt-2">
+              <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-800">
                 <button
                   type="button"
                   onClick={() => setEditingFacility(null)}
-                  className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold"
+                  className="px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 font-semibold"
                 >
                   Batal
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 rounded-xl bg-teal-600 hover:bg-teal-500 text-white font-bold shadow"
+                  className="px-5 py-2 rounded-xl bg-teal-600 hover:bg-teal-500 text-white font-extrabold shadow-lg"
                 >
-                  Simpan Status
+                  Simpan Perubahan
                 </button>
               </div>
             </form>
@@ -354,13 +355,13 @@ export const PoskoView: React.FC = () => {
         </div>
       )}
 
-      {/* Modal Add / Edit Room */}
+      {/* Room Modal (Add / Edit) */}
       {(isAddRoomModalOpen || editingRoom) && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
-          <div className="glass-panel w-full max-w-md rounded-2xl p-6 border border-slate-700 shadow-2xl space-y-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
+          <div className="glass-card w-full max-w-md rounded-3xl p-6 border border-slate-700 shadow-2xl space-y-4">
             <div className="flex items-center justify-between pb-3 border-b border-slate-800">
-              <h3 className="text-base font-extrabold text-white">
-                {editingRoom ? 'Edit Layout Ruangan' : 'Tambah Ruangan Posko'}
+              <h3 className="text-base font-black text-white font-heading">
+                {editingRoom ? 'Edit Tata Letak Kamar' : 'Tambah Ruangan / Kamar Posko'}
               </h3>
               <button
                 onClick={() => {
@@ -373,68 +374,69 @@ export const PoskoView: React.FC = () => {
               </button>
             </div>
 
-            <form onSubmit={handleSaveRoomSubmit} className="space-y-3.5 text-xs">
+            <form onSubmit={handleSaveRoomSubmit} className="space-y-4 text-xs">
               <div>
-                <label className="block font-semibold text-slate-300 mb-1">Nama Ruangan / Kamar *</label>
+                <label className="block font-bold text-slate-300 mb-1">Nama Ruangan / Kamar *</label>
                 <input
                   type="text"
                   required
-                  placeholder="Contoh: Kamar Depan (Putra) / Storage Gudang"
+                  placeholder="Contoh: Kamar Putra 1 / Gudang Logistik"
                   value={roomName}
                   onChange={e => setRoomName(e.target.value)}
-                  className="w-full px-3.5 py-2 rounded-xl bg-slate-800 border border-slate-700 text-slate-100 focus:outline-none focus:border-teal-500"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-100 focus:outline-none focus:border-indigo-500"
                 />
               </div>
 
               <div>
-                <label className="block font-semibold text-slate-300 mb-1">Kapasitas Orang</label>
+                <label className="block font-bold text-slate-300 mb-1">Kapasitas Tempat Tidur *</label>
                 <input
                   type="number"
-                  min="0"
+                  min="1"
+                  required
                   value={roomCapacity}
-                  onChange={e => setRoomCapacity(parseInt(e.target.value) || 0)}
-                  className="w-full px-3.5 py-2 rounded-xl bg-slate-800 border border-slate-700 text-slate-100 focus:outline-none focus:border-teal-500"
+                  onChange={e => setRoomCapacity(parseInt(e.target.value) || 1)}
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-100 font-mono focus:outline-none focus:border-indigo-500"
                 />
               </div>
 
               <div>
-                <label className="block font-semibold text-slate-300 mb-1">Daftar Penghuni (Pisahkan dengan Koma)</label>
-                <textarea
-                  rows={2}
-                  placeholder="Contoh: Andi, Budi, Rian, Faris"
+                <label className="block font-bold text-slate-300 mb-1">Daftar Anggota Penghuni (Pisahkan Koma)</label>
+                <input
+                  type="text"
+                  placeholder="Verri, Andika, Pratama, Farhan"
                   value={occupantsText}
                   onChange={e => setOccupantsText(e.target.value)}
-                  className="w-full px-3.5 py-2 rounded-xl bg-slate-800 border border-slate-700 text-slate-100 focus:outline-none focus:border-teal-500"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-100 focus:outline-none focus:border-indigo-500"
                 />
               </div>
 
               <div>
-                <label className="block font-semibold text-slate-300 mb-1">Fasilitas / Barang Terpasang (Pisahkan dengan Koma)</label>
-                <textarea
-                  rows={2}
-                  placeholder="Contoh: 1 Kipas Angin, 1 Kabel Roll, 2 Kasur Busa"
+                <label className="block font-bold text-slate-300 mb-1">Perangkat / Fasilitas Kamar (Pisahkan Koma)</label>
+                <input
+                  type="text"
+                  placeholder="Kasur Busa 2x, Kipas Angin, Kabel Roll"
                   value={equipmentText}
                   onChange={e => setEquipmentText(e.target.value)}
-                  className="w-full px-3.5 py-2 rounded-xl bg-slate-800 border border-slate-700 text-slate-100 focus:outline-none focus:border-teal-500"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-100 focus:outline-none focus:border-indigo-500"
                 />
               </div>
 
-              <div className="flex items-center justify-end gap-3 pt-2">
+              <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-800">
                 <button
                   type="button"
                   onClick={() => {
                     setIsAddRoomModalOpen(false);
                     setEditingRoom(null);
                   }}
-                  className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold"
+                  className="px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 font-semibold"
                 >
                   Batal
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 rounded-xl bg-teal-600 hover:bg-teal-500 text-white font-bold shadow"
+                  className="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold shadow-lg"
                 >
-                  Simpan Ruangan
+                  Simpan Layout
                 </button>
               </div>
             </form>
