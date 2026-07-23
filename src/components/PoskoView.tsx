@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { usePerkab } from '../context/PerkabContext';
 import { PoskoFacility, PoskoRoomLayout, FacilityStatus } from '../types';
+import { ImageUploader } from './ImageUploader';
 
 export const PoskoView: React.FC = () => {
   const {
@@ -32,6 +33,7 @@ export const PoskoView: React.FC = () => {
   const [facStatus, setFacStatus] = useState<FacilityStatus>('Sangat Baik');
   const [facDetails, setFacDetails] = useState('');
   const [facPic, setFacPic] = useState('');
+  const [facImage, setFacImage] = useState('');
 
   // Room Modal State
   const [editingRoom, setEditingRoom] = useState<PoskoRoomLayout | null>(null);
@@ -40,6 +42,7 @@ export const PoskoView: React.FC = () => {
   const [roomCapacity, setRoomCapacity] = useState(4);
   const [occupantsText, setOccupantsText] = useState('');
   const [equipmentText, setEquipmentText] = useState('');
+  const [roomImage, setRoomImage] = useState('');
 
   const getCategoryIcon = (category: string) => {
     switch (category) {
@@ -60,6 +63,7 @@ export const PoskoView: React.FC = () => {
     e.preventDefault();
     if (!editingFacility) return;
     updateFacilityStatus(editingFacility.id, facStatus, facDetails, facPic);
+    editingFacility.imageUrl = facImage || undefined;
     setEditingFacility(null);
   };
 
@@ -68,6 +72,7 @@ export const PoskoView: React.FC = () => {
     setFacStatus(fac.status);
     setFacDetails(fac.details);
     setFacPic(fac.picName);
+    setFacImage(fac.imageUrl || '');
   };
 
   const handleSaveRoomSubmit = (e: React.FormEvent) => {
@@ -82,6 +87,7 @@ export const PoskoView: React.FC = () => {
         capacity: roomCapacity,
         occupants,
         assignedEquipment,
+        imageUrl: roomImage || undefined,
       });
       setEditingRoom(null);
     } else {
@@ -90,6 +96,7 @@ export const PoskoView: React.FC = () => {
         capacity: roomCapacity,
         occupants,
         assignedEquipment,
+        imageUrl: roomImage || undefined,
       });
       setIsAddRoomModalOpen(false);
     }
@@ -102,6 +109,7 @@ export const PoskoView: React.FC = () => {
     setRoomCapacity(room.capacity);
     setOccupantsText(room.occupants.join(', '));
     setEquipmentText(room.assignedEquipment.join(', '));
+    setRoomImage(room.imageUrl || '');
   };
 
   const resetRoomForm = () => {
@@ -109,6 +117,7 @@ export const PoskoView: React.FC = () => {
     setRoomCapacity(4);
     setOccupantsText('');
     setEquipmentText('');
+    setRoomImage('');
   };
 
   const goodFacilityCount = facilities.filter(f => f.status === 'Sangat Baik').length;
@@ -148,6 +157,11 @@ export const PoskoView: React.FC = () => {
               className="glass-card glass-card-hover rounded-2xl p-5 border border-slate-800 dark:border-slate-800 light:border-slate-200 space-y-3 flex flex-col justify-between"
             >
               <div className="space-y-2.5">
+                {fac.imageUrl && (
+                  <div className="w-full h-32 rounded-xl overflow-hidden border border-slate-800 shrink-0 mb-1">
+                    <img src={fac.imageUrl} alt={fac.facilityName} className="w-full h-full object-cover" />
+                  </div>
+                )}
                 <div className="flex items-start justify-between">
                   <div className="flex items-center gap-3">
                     <div className="p-2.5 rounded-xl bg-slate-900 dark:bg-slate-900 light:bg-slate-100 border border-slate-800 dark:border-slate-800 light:border-slate-200">
@@ -224,6 +238,11 @@ export const PoskoView: React.FC = () => {
               className="glass-card glass-card-hover rounded-2xl p-5 border border-slate-800 dark:border-slate-800 light:border-slate-200 space-y-4 flex flex-col justify-between"
             >
               <div className="space-y-3">
+                {room.imageUrl && (
+                  <div className="w-full h-32 rounded-xl overflow-hidden border border-slate-800 shrink-0 mb-1">
+                    <img src={room.imageUrl} alt={room.roomName} className="w-full h-full object-cover" />
+                  </div>
+                )}
                 <div className="flex items-center justify-between">
                   <h4 className="text-base font-black text-white dark:text-white light:text-slate-900 font-heading">
                     {room.roomName}
@@ -335,6 +354,12 @@ export const PoskoView: React.FC = () => {
                 />
               </div>
 
+              <ImageUploader
+                value={facImage}
+                onChange={setFacImage}
+                label="Foto Bukti Fasilitas Posko (Opsional)"
+              />
+
               <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-800">
                 <button
                   type="button"
@@ -420,6 +445,12 @@ export const PoskoView: React.FC = () => {
                   className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-100 focus:outline-none focus:border-indigo-500"
                 />
               </div>
+
+              <ImageUploader
+                value={roomImage}
+                onChange={setRoomImage}
+                label="Denah / Foto Ruangan Kamar (Opsional)"
+              />
 
               <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-800">
                 <button

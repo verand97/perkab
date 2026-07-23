@@ -13,6 +13,7 @@ import {
 import { usePerkab } from '../context/PerkabContext';
 import { MaintenanceLog, MaintenanceStatus } from '../types';
 import { exportToCSV } from '../lib/exportExcel';
+import { ImageUploader } from './ImageUploader';
 
 export const MaintenanceView: React.FC = () => {
   const {
@@ -29,6 +30,7 @@ export const MaintenanceView: React.FC = () => {
   const [reportedBy, setReportedBy] = useState('');
   const [damageDescription, setDamageDescription] = useState('');
   const [estimatedCost, setEstimatedCost] = useState(0);
+  const [imageUrl, setImageUrl] = useState('');
 
   // Resolution modal state
   const [mStatus, setMStatus] = useState<MaintenanceStatus>('Dalam Perbaikan');
@@ -42,6 +44,7 @@ export const MaintenanceView: React.FC = () => {
       damageDescription,
       estimatedCost: Number(estimatedCost),
       status: 'Dilaporkan',
+      imageUrl: imageUrl || undefined,
     });
     setIsAddModalOpen(false);
     resetForm();
@@ -60,6 +63,7 @@ export const MaintenanceView: React.FC = () => {
     setReportedBy('');
     setDamageDescription('');
     setEstimatedCost(0);
+    setImageUrl('');
   };
 
   const statuses: MaintenanceStatus[] = [
@@ -126,6 +130,11 @@ export const MaintenanceView: React.FC = () => {
             className="glass-panel rounded-2xl p-5 border border-slate-800 space-y-4 flex flex-col justify-between"
           >
             <div className="space-y-3">
+              {log.imageUrl && (
+                <div className="w-full h-36 rounded-xl overflow-hidden border border-slate-800 shrink-0 mb-3">
+                  <img src={log.imageUrl} alt={log.itemName} className="w-full h-full object-cover" />
+                </div>
+              )}
               <div className="flex items-center justify-between">
                 <span
                   className={`px-3 py-1 rounded-full text-[11px] font-extrabold border ${
@@ -260,6 +269,12 @@ export const MaintenanceView: React.FC = () => {
                   className="w-full px-3.5 py-2 rounded-xl bg-slate-800 border border-slate-700 text-slate-100 focus:outline-none focus:border-rose-500"
                 />
               </div>
+
+              <ImageUploader
+                value={imageUrl}
+                onChange={setImageUrl}
+                label="Foto Bukti Kerusakan Barang (Opsional)"
+              />
 
               <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-800">
                 <button

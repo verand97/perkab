@@ -14,6 +14,7 @@ import {
 import { usePerkab } from '../context/PerkabContext';
 import { TransportRecord, VehicleType, TransportStatus } from '../types';
 import { exportToCSV } from '../lib/exportExcel';
+import { ImageUploader } from './ImageUploader';
 
 export const TransportView: React.FC = () => {
   const {
@@ -35,6 +36,7 @@ export const TransportView: React.FC = () => {
   const [returnDate, setReturnDate] = useState('');
   const [cargoDetails, setCargoDetails] = useState('');
   const [cost, setCost] = useState(0);
+  const [imageUrl, setImageUrl] = useState('');
 
   const handleAddSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -48,6 +50,7 @@ export const TransportView: React.FC = () => {
       cargoDetails,
       cost: Number(cost),
       status: 'Jadwal',
+      imageUrl: imageUrl || undefined,
     });
     setIsAddModalOpen(false);
     resetForm();
@@ -62,6 +65,7 @@ export const TransportView: React.FC = () => {
     setReturnDate('');
     setCargoDetails('');
     setCost(0);
+    setImageUrl('');
   };
 
   const handleExportCSV = () => {
@@ -123,6 +127,11 @@ export const TransportView: React.FC = () => {
             className="glass-panel rounded-2xl p-5 border border-slate-800 space-y-4 flex flex-col justify-between"
           >
             <div className="space-y-3">
+              {trp.imageUrl && (
+                <div className="w-full h-36 rounded-xl overflow-hidden border border-slate-800 shrink-0 mb-3">
+                  <img src={trp.imageUrl} alt={trp.vehicleName} className="w-full h-full object-cover" />
+                </div>
+              )}
               <div className="flex items-center justify-between">
                 <span className="px-2.5 py-1 rounded-lg bg-cyan-950/60 text-cyan-400 border border-cyan-800/40 text-xs font-bold">
                   {trp.vehicleType}
@@ -328,6 +337,12 @@ export const TransportView: React.FC = () => {
                   className="w-full px-3.5 py-2 rounded-xl bg-slate-800 border border-slate-700 text-slate-100 focus:outline-none focus:border-cyan-500"
                 />
               </div>
+
+              <ImageUploader
+                value={imageUrl}
+                onChange={setImageUrl}
+                label="Foto Armada / Kendaraan (Opsional)"
+              />
 
               <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-800">
                 <button

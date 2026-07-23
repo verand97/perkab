@@ -17,6 +17,7 @@ import {
 import { usePerkab } from '../context/PerkabContext';
 import { BorrowingRecord, BorrowingStatus, ReturnCondition } from '../types';
 import { exportToCSV } from '../lib/exportExcel';
+import { ImageUploader } from './ImageUploader';
 
 export const BorrowingView: React.FC = () => {
   const {
@@ -48,6 +49,7 @@ export const BorrowingView: React.FC = () => {
     dueDate: '',
     quantity: 1,
     depositCost: 0,
+    imageUrl: '',
     notes: '',
   });
 
@@ -82,6 +84,7 @@ export const BorrowingView: React.FC = () => {
       quantity: Number(formData.quantity),
       depositCost: Number(formData.depositCost),
       status: 'Dipinjam',
+      imageUrl: formData.imageUrl || undefined,
       notes: formData.notes || undefined,
     });
     setIsAddModalOpen(false);
@@ -107,6 +110,7 @@ export const BorrowingView: React.FC = () => {
       dueDate: '',
       quantity: 1,
       depositCost: 0,
+      imageUrl: '',
       notes: '',
     });
   };
@@ -119,6 +123,7 @@ export const BorrowingView: React.FC = () => {
         inventoryId: invId,
         itemName: found.name,
         lenderName: found.ownership === 'Kelompok' ? 'Gudang Posko KKN' : (found.lenderName || 'Warga Desa'),
+        imageUrl: found.imageUrl || prev.imageUrl,
       }));
     }
   };
@@ -251,6 +256,11 @@ export const BorrowingView: React.FC = () => {
               }`}
             >
               <div className="space-y-3">
+                {bor.imageUrl && (
+                  <div className="w-full h-36 rounded-xl overflow-hidden border border-slate-800 shrink-0">
+                    <img src={bor.imageUrl} alt={bor.itemName} className="w-full h-full object-cover" />
+                  </div>
+                )}
                 {/* Header */}
                 <div className="flex items-start justify-between gap-2">
                   <div>
@@ -492,6 +502,12 @@ export const BorrowingView: React.FC = () => {
                   />
                 </div>
               </div>
+
+              <ImageUploader
+                value={formData.imageUrl}
+                onChange={url => setFormData({ ...formData, imageUrl: url })}
+                label="Foto / Bukti Fisik Barang Pinjaman (Opsional)"
+              />
 
               <div>
                 <label className="block font-bold text-slate-300 mb-1">Biaya Deposit / Uang Muka (Rp)</label>

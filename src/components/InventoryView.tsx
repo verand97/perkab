@@ -16,6 +16,7 @@ import {
 import { usePerkab } from '../context/PerkabContext';
 import { InventoryItem, InventoryCategory, ItemCondition, ItemOwnership } from '../types';
 import { exportToCSV } from '../lib/exportExcel';
+import { ImageUploader } from './ImageUploader';
 
 interface InventoryViewProps {
   onOpenExport: () => void;
@@ -50,6 +51,7 @@ export const InventoryView: React.FC<InventoryViewProps> = ({ onOpenExport }) =>
     ownership: 'Kelompok' as ItemOwnership,
     lenderName: '',
     location: 'Posko',
+    imageUrl: '',
     notes: '',
   });
 
@@ -88,6 +90,7 @@ export const InventoryView: React.FC<InventoryViewProps> = ({ onOpenExport }) =>
       ownership: formData.ownership,
       lenderName: formData.lenderName || undefined,
       location: formData.location,
+      imageUrl: formData.imageUrl || undefined,
       notes: formData.notes || undefined,
     });
     setIsAddModalOpen(false);
@@ -108,6 +111,7 @@ export const InventoryView: React.FC<InventoryViewProps> = ({ onOpenExport }) =>
       ownership: formData.ownership,
       lenderName: formData.lenderName || undefined,
       location: formData.location,
+      imageUrl: formData.imageUrl || undefined,
       notes: formData.notes || undefined,
     });
     setEditingItem(null);
@@ -125,6 +129,7 @@ export const InventoryView: React.FC<InventoryViewProps> = ({ onOpenExport }) =>
       ownership: item.ownership,
       lenderName: item.lenderName || '',
       location: item.location,
+      imageUrl: item.imageUrl || '',
       notes: item.notes || '',
     });
   };
@@ -139,6 +144,7 @@ export const InventoryView: React.FC<InventoryViewProps> = ({ onOpenExport }) =>
       ownership: 'Kelompok',
       lenderName: '',
       location: 'Posko',
+      imageUrl: '',
       notes: '',
     });
   };
@@ -291,18 +297,31 @@ export const InventoryView: React.FC<InventoryViewProps> = ({ onOpenExport }) =>
               {filteredItems.map(item => (
                 <tr key={item.id} className="hover:bg-slate-800/40 transition-colors">
                   <td className="py-3.5 px-4">
-                    <div className="font-bold text-slate-100 flex items-center gap-2 font-heading">
-                      <span>{item.name}</span>
-                    </div>
-                    <div className="flex items-center gap-2 mt-1">
-                      <span className="font-mono text-[10px] text-emerald-400 bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-800/40 font-bold">
-                        {item.code}
-                      </span>
-                      {item.notes && (
-                        <span className="text-[11px] text-slate-400 truncate max-w-50" title={item.notes}>
-                          • {item.notes}
-                        </span>
+                    <div className="flex items-center gap-3">
+                      {item.imageUrl ? (
+                        <img
+                          src={item.imageUrl}
+                          alt={item.name}
+                          className="w-10 h-10 rounded-xl object-cover border border-slate-700 shrink-0 shadow-sm"
+                        />
+                      ) : (
+                        <div className="w-10 h-10 rounded-xl bg-slate-900 flex items-center justify-center text-slate-500 border border-slate-800 shrink-0">
+                          <Package className="w-5 h-5" />
+                        </div>
                       )}
+                      <div>
+                        <div className="font-bold text-slate-100 font-heading leading-tight">{item.name}</div>
+                        <div className="flex items-center gap-2 mt-1">
+                          <span className="font-mono text-[10px] text-emerald-400 bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-800/40 font-bold">
+                            {item.code}
+                          </span>
+                          {item.notes && (
+                            <span className="text-[11px] text-slate-400 truncate max-w-50" title={item.notes}>
+                              • {item.notes}
+                            </span>
+                          )}
+                        </div>
+                      </div>
                     </div>
                   </td>
 
@@ -522,6 +541,12 @@ export const InventoryView: React.FC<InventoryViewProps> = ({ onOpenExport }) =>
                   className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-100 focus:outline-none focus:border-emerald-500"
                 />
               </div>
+
+              <ImageUploader
+                value={formData.imageUrl}
+                onChange={url => setFormData({ ...formData, imageUrl: url })}
+                label="Foto / Gambar Barang Inventaris (Opsional)"
+              />
 
               <div>
                 <label className="block font-bold text-slate-300 mb-1">Catatan Tambahan</label>

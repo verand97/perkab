@@ -14,6 +14,7 @@ export interface InventoryItem {
   ownership: ItemOwnership;
   lenderName?: string;
   location: string;
+  imageUrl?: string;
   notes?: string;
   created_at?: string;
 }
@@ -35,6 +36,7 @@ export interface BorrowingRecord {
   depositCost: number;
   status: BorrowingStatus;
   conditionOnReturn?: ReturnCondition;
+  imageUrl?: string;
   notes?: string;
   created_at?: string;
 }
@@ -50,6 +52,7 @@ export interface PoskoFacility {
   details: string;
   lastChecked: string;
   picName: string;
+  imageUrl?: string;
   created_at?: string;
 }
 
@@ -59,6 +62,7 @@ export interface PoskoRoomLayout {
   capacity: number;
   occupants: string[];
   assignedEquipment: string[];
+  imageUrl?: string;
   notes?: string;
 }
 
@@ -79,6 +83,7 @@ export interface EventSetup {
   picName: string;
   setupStatus: SetupStatus;
   requiredItems: EventChecklistItem[];
+  imageUrl?: string;
   notes?: string;
   created_at?: string;
 }
@@ -97,6 +102,7 @@ export interface TransportRecord {
   cargoDetails: string;
   cost: number;
   status: TransportStatus;
+  imageUrl?: string;
   created_at?: string;
 }
 
@@ -111,6 +117,7 @@ export interface MaintenanceLog {
   status: MaintenanceStatus;
   resolutionNotes?: string;
   dateReported: string;
+  imageUrl?: string;
   created_at?: string;
 }
 
@@ -128,6 +135,7 @@ export interface UserAccount {
   nim: string;
   role: UserRole;
   position?: string;
+  avatarUrl?: string;
   created_at?: string;
 }
 

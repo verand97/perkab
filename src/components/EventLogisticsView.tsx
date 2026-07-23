@@ -14,6 +14,7 @@ import {
 import { usePerkab } from '../context/PerkabContext';
 import { EventSetup, SetupStatus } from '../types';
 import { exportToCSV } from '../lib/exportExcel';
+import { ImageUploader } from './ImageUploader';
 
 export const EventLogisticsView: React.FC = () => {
   const {
@@ -33,6 +34,7 @@ export const EventLogisticsView: React.FC = () => {
   const [location, setLocation] = useState('');
   const [picName, setPicName] = useState('');
   const [itemsInput, setItemsInput] = useState('');
+  const [imageUrl, setImageUrl] = useState('');
   const [notes, setNotes] = useState('');
 
   const handleAddSubmit = (e: React.FormEvent) => {
@@ -55,6 +57,7 @@ export const EventLogisticsView: React.FC = () => {
       picName,
       setupStatus: 'Perencanaan',
       requiredItems,
+      imageUrl: imageUrl || undefined,
       notes: notes || undefined,
     });
 
@@ -68,6 +71,7 @@ export const EventLogisticsView: React.FC = () => {
     setLocation('');
     setPicName('');
     setItemsInput('');
+    setImageUrl('');
     setNotes('');
   };
 
@@ -141,6 +145,11 @@ export const EventLogisticsView: React.FC = () => {
               className="glass-panel rounded-2xl p-6 border border-slate-800 space-y-5"
             >
               {/* Event Info Header */}
+              {evt.imageUrl && (
+                <div className="w-full h-40 rounded-xl overflow-hidden border border-slate-800 shrink-0 mb-3">
+                  <img src={evt.imageUrl} alt={evt.eventName} className="w-full h-full object-cover" />
+                </div>
+              )}
               <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-slate-800">
                 <div>
                   <div className="flex items-center gap-2">
@@ -344,6 +353,12 @@ export const EventLogisticsView: React.FC = () => {
                   className="w-full px-3.5 py-2 rounded-xl bg-slate-800 border border-slate-700 text-slate-100 focus:outline-none focus:border-cyan-500 font-mono text-xs"
                 />
               </div>
+
+              <ImageUploader
+                value={imageUrl}
+                onChange={setImageUrl}
+                label="Foto Dokumen / Lokasi Proker Acara (Opsional)"
+              />
 
               <div>
                 <label className="block font-semibold text-slate-300 mb-1">Catatan Teknis</label>
