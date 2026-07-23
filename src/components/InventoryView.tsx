@@ -300,7 +300,7 @@ export const InventoryView: React.FC<InventoryViewProps> = () => {
                         {item.code}
                       </span>
                       {item.notes && (
-                        <span className="text-[11px] text-slate-400 truncate max-w-[200px]" title={item.notes}>
+                        <span className="text-[11px] text-slate-400 truncate max-w-50" title={item.notes}>
                           • {item.notes}
                         </span>
                       )}

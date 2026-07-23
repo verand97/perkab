@@ -22,7 +22,7 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({ options, onClose }) 
       <div className="glass-panel w-full max-w-md rounded-2xl p-6 border border-slate-700 shadow-2xl space-y-4 relative animate-in fade-in zoom-in-95 duration-150">
         <div className="flex items-start gap-4">
           <div
-            className={`p-3 rounded-xl flex-shrink-0 ${
+            className={`p-3 rounded-xl shrink-0 ${
               isDanger
                 ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30'
                 : 'bg-teal-500/20 text-teal-400 border border-teal-500/30'

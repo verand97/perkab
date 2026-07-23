@@ -36,7 +36,7 @@ export const ToastContainer: React.FC<ToastContainerProps> = ({ toasts, onRemove
                 : 'border-cyan-500/40 bg-slate-900/95 text-cyan-300'
             }`}
           >
-            <div className="flex-shrink-0 pt-0.5">
+            <div className="shrink-0 pt-0.5">
               {isSuccess && <CheckCircle2 className="w-5 h-5 text-emerald-400" />}
               {isError && <XCircle className="w-5 h-5 text-rose-400" />}
               {isWarning && <AlertTriangle className="w-5 h-5 text-amber-400" />}
@@ -52,7 +52,7 @@ export const ToastContainer: React.FC<ToastContainerProps> = ({ toasts, onRemove
 
             <button
               onClick={() => onRemoveToast(toast.id)}
-              className="flex-shrink-0 text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 transition-colors"
+              className="shrink-0 text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 transition-colors"
             >
               <X className="w-4 h-4" />
             </button>

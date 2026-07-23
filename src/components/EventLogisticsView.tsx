@@ -205,7 +205,7 @@ export const EventLogisticsView: React.FC = () => {
                 </div>
                 <div className="w-full h-2.5 rounded-full bg-slate-800 overflow-hidden border border-slate-700/60">
                   <div
-                    className="h-full bg-gradient-to-r from-cyan-500 to-emerald-400 rounded-full transition-all duration-300"
+                    className="h-full bg-linear-to-r from-cyan-500 to-emerald-400 rounded-full transition-all duration-300"
                     style={{ width: `${percent}%` }}
                   />
                 </div>
@@ -230,9 +230,9 @@ export const EventLogisticsView: React.FC = () => {
                     >
                       <div className="flex items-center gap-2.5">
                         {item.isReady ? (
-                          <CheckSquare className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+                          <CheckSquare className="w-4 h-4 text-emerald-400 shrink-0" />
                         ) : (
-                          <Square className="w-4 h-4 text-slate-500 flex-shrink-0" />
+                          <Square className="w-4 h-4 text-slate-500 shrink-0" />
                         )}
                         <span className={item.isReady ? 'line-through text-emerald-300/80' : ''}>
                           {item.itemName}
