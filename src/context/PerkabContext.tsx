@@ -129,11 +129,25 @@ export const PerkabProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   // Toast & Confirm System State
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
   const [confirmOptions, setConfirmOptions] = useState<ConfirmDialogOptions | null>(null);
+  const lastToastRef = useRef<{ message: string; timestamp: number }>({ message: '', timestamp: 0 });
 
   const showToast = (message: string, type: ToastType = 'info', title?: string) => {
-    const id = `tst-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
+    const now = Date.now();
+    // Prevent duplicate identical notification within 1.5 seconds
+    if (lastToastRef.current.message === message && now - lastToastRef.current.timestamp < 1500) {
+      return;
+    }
+    lastToastRef.current = { message, timestamp: now };
+
+    const id = `tst-${now}-${Math.random().toString(36).substring(2, 6)}`;
     const newToast: ToastMessage = { id, message, type, title };
-    setToasts(prev => [newToast, ...prev].slice(0, 5));
+
+    setToasts(prev => {
+      if (prev.some(t => t.message === message)) {
+        return prev;
+      }
+      return [newToast, ...prev].slice(0, 4);
+    });
 
     setTimeout(() => {
       removeToast(id);
