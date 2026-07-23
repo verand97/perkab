@@ -22,6 +22,7 @@ export const UserManagementView: React.FC = () => {
     updateUser,
     deleteUser,
     currentUser,
+    showConfirm,
   } = usePerkab();
 
   const [searchQuery, setSearchQuery] = useState('');
@@ -207,9 +208,13 @@ export const UserManagementView: React.FC = () => {
                         {!isSelf && (
                           <button
                             onClick={() => {
-                              if (confirm(`Hapus akun user "${u.name}"?`)) {
-                                deleteUser(u.id);
-                              }
+                              showConfirm({
+                                title: 'Hapus Akun User',
+                                message: `Apakah Anda yakin ingin menghapus akun user "${u.name}" (${u.role})?`,
+                                confirmText: 'Ya, Hapus User',
+                                danger: true,
+                                onConfirm: () => deleteUser(u.id),
+                              });
                             }}
                             className="p-1.5 rounded-lg bg-slate-800 hover:bg-rose-900/60 text-slate-400 hover:text-rose-300 border border-slate-700"
                             title="Hapus User"

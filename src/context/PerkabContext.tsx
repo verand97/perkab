@@ -9,6 +9,9 @@ import {
   MaintenanceLog,
   SupabaseConfig,
   UserAccount,
+  ToastMessage,
+  ToastType,
+  ConfirmDialogOptions,
 } from '../types';
 import {
   INITIAL_INVENTORY,
@@ -32,6 +35,14 @@ interface PerkabContextType {
   currentUser: UserAccount | null;
   login: (nameOrNim: string, nim: string) => boolean;
   logout: () => void;
+
+  // Notification & Dialog System
+  toasts: ToastMessage[];
+  showToast: (message: string, type?: ToastType, title?: string) => void;
+  removeToast: (id: string) => void;
+  confirmOptions: ConfirmDialogOptions | null;
+  showConfirm: (options: ConfirmDialogOptions) => void;
+  closeConfirm: () => void;
 
   // Users CRUD
   users: UserAccount[];
@@ -89,6 +100,33 @@ const LOCAL_STORAGE_KEY = 'perkab_app_data_v1';
 const SESSION_KEY = 'perkab_session_user';
 
 export const PerkabProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  // Toast & Confirm System State
+  const [toasts, setToasts] = useState<ToastMessage[]>([]);
+  const [confirmOptions, setConfirmOptions] = useState<ConfirmDialogOptions | null>(null);
+
+  const showToast = (message: string, type: ToastType = 'info', title?: string) => {
+    const id = `tst-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
+    const newToast: ToastMessage = { id, message, type, title };
+    setToasts(prev => [newToast, ...prev].slice(0, 5)); // Keep max 5 toasts
+
+    // Auto dismiss after 3.5 seconds
+    setTimeout(() => {
+      removeToast(id);
+    }, 3500);
+  };
+
+  const removeToast = (id: string) => {
+    setToasts(prev => prev.filter(t => t.id !== id));
+  };
+
+  const showConfirm = (options: ConfirmDialogOptions) => {
+    setConfirmOptions(options);
+  };
+
+  const closeConfirm = () => {
+    setConfirmOptions(null);
+  };
+
   const [currentUser, setCurrentUser] = useState<UserAccount | null>(() => {
     const saved = localStorage.getItem(SESSION_KEY);
     if (saved) {
@@ -168,7 +206,6 @@ export const PerkabProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     const client = getSupabaseClient();
     if (!client) return;
 
-    // Async sync remote data if available
     async function syncRemote() {
       try {
         const { data: userData } = await client!.from('users').select('*');
@@ -223,14 +260,17 @@ export const PerkabProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     if (matchedUser) {
       setCurrentUser(matchedUser);
       localStorage.setItem(SESSION_KEY, JSON.stringify(matchedUser));
+      showToast(`Selamat datang kembali, ${matchedUser.name}!`, 'success', 'Login Berhasil');
       return true;
     }
+    showToast('Nama atau NIM tidak cocok dengan database!', 'error', 'Login Gagal');
     return false;
   };
 
   const logout = () => {
     setCurrentUser(null);
     localStorage.removeItem(SESSION_KEY);
+    showToast('Anda telah keluar dari aplikasi.', 'info', 'Logout');
   };
 
   // User CRUD Handlers
@@ -241,6 +281,7 @@ export const PerkabProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       id,
     };
     setUsers(prev => [...prev, userItem]);
+    showToast(`User ${newUser.name} berhasil ditambahkan!`, 'success');
 
     const client = getSupabaseClient();
     if (client) {
@@ -260,6 +301,7 @@ export const PerkabProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       setCurrentUser(updated);
       localStorage.setItem(SESSION_KEY, JSON.stringify(updated));
     }
+    showToast(`Data user ${updated.name} berhasil diperbarui.`, 'success');
 
     const client = getSupabaseClient();
     if (client) {
@@ -274,6 +316,7 @@ export const PerkabProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   const deleteUser = (id: string) => {
     setUsers(prev => prev.filter(u => u.id !== id));
+    showToast('User berhasil dihapus.', 'info');
     const client = getSupabaseClient();
     if (client) {
       client.from('users').delete().eq('id', id).then();
@@ -294,6 +337,7 @@ export const PerkabProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     };
 
     setInventory(prev => [newItem, ...prev]);
+    showToast(`Barang "${item.name}" (${code}) berhasil ditambahkan!`, 'success');
 
     const client = getSupabaseClient();
     if (client) {
@@ -316,6 +360,7 @@ export const PerkabProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   const updateInventoryItem = (updated: InventoryItem) => {
     setInventory(prev => prev.map(item => item.id === updated.id ? updated : item));
+    showToast(`Data barang "${updated.name}" berhasil diperbarui.`, 'success');
 
     const client = getSupabaseClient();
     if (client) {
@@ -336,6 +381,7 @@ export const PerkabProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   const deleteInventoryItem = (id: string) => {
     setInventory(prev => prev.filter(item => item.id !== id));
+    showToast('Barang inventaris dihapus.', 'info');
     const client = getSupabaseClient();
     if (client) {
       client.from('inventory').delete().eq('id', id).then();
@@ -351,6 +397,7 @@ export const PerkabProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     };
 
     setBorrowings(prev => [newRecord, ...prev]);
+    showToast(`Peminjaman "${record.itemName}" berhasil dicatat.`, 'success');
 
     if (record.inventoryId) {
       setInventory(prev => prev.map(inv => {
@@ -422,6 +469,8 @@ export const PerkabProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       return bor;
     }));
 
+    showToast('Status pengembalian barang berhasil dicatat!', 'success');
+
     const client = getSupabaseClient();
     if (client) {
       client.from('borrowings').update({
@@ -434,6 +483,7 @@ export const PerkabProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   const deleteBorrowingRecord = (id: string) => {
     setBorrowings(prev => prev.filter(bor => bor.id !== id));
+    showToast('Record peminjaman dihapus.', 'info');
     const client = getSupabaseClient();
     if (client) {
       client.from('borrowings').delete().eq('id', id).then();
@@ -444,10 +494,12 @@ export const PerkabProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const updateFacilityStatus = (id: string, status: PoskoFacility['status'], details: string, picName: string) => {
     const today = new Date().toISOString().split('T')[0];
     setFacilities(prev => prev.map(f => f.id === id ? { ...f, status, details, lastChecked: today, picName } : f));
+    showToast('Status fasilitas posko berhasil diperbarui.', 'success');
   };
 
   const updateRoomLayout = (updatedRoom: PoskoRoomLayout) => {
     setRooms(prev => prev.map(r => r.id === updatedRoom.id ? updatedRoom : r));
+    showToast(`Layout ${updatedRoom.roomName} berhasil diperbarui.`, 'success');
   };
 
   const addRoomLayout = (room: Omit<PoskoRoomLayout, 'id'>) => {
@@ -456,6 +508,7 @@ export const PerkabProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       id: `room-${Date.now()}`,
     };
     setRooms(prev => [...prev, newRoom]);
+    showToast(`Ruangan ${room.roomName} berhasil ditambahkan!`, 'success');
   };
 
   // Event Handlers
@@ -465,10 +518,12 @@ export const PerkabProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       id: `evt-${Date.now()}`,
     };
     setEventSetups(prev => [newEvt, ...prev]);
+    showToast(`Setup proker "${evt.eventName}" berhasil dibuat.`, 'success');
   };
 
   const updateEventStatus = (id: string, status: EventSetup['setupStatus']) => {
     setEventSetups(prev => prev.map(e => e.id === id ? { ...e, setupStatus: status } : e));
+    showToast('Status alur proker diperbarui.', 'info');
   };
 
   const toggleEventChecklistItem = (eventId: string, itemId: string) => {
@@ -488,6 +543,7 @@ export const PerkabProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   const deleteEventSetup = (id: string) => {
     setEventSetups(prev => prev.filter(e => e.id !== id));
+    showToast('Setup proker dihapus.', 'info');
   };
 
   // Transport Handlers
@@ -497,14 +553,17 @@ export const PerkabProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       id: `trp-${Date.now()}`,
     };
     setTransports(prev => [newTrp, ...prev]);
+    showToast(`Jadwal armada ${trp.vehicleName} berhasil disimpan.`, 'success');
   };
 
   const updateTransportStatus = (id: string, status: TransportRecord['status']) => {
     setTransports(prev => prev.map(t => t.id === id ? { ...t, status } : t));
+    showToast('Status mobilisasi diperbarui.', 'info');
   };
 
   const deleteTransportRecord = (id: string) => {
     setTransports(prev => prev.filter(t => t.id !== id));
+    showToast('Jadwal transportasi dihapus.', 'info');
   };
 
   // Maintenance Handlers
@@ -516,6 +575,7 @@ export const PerkabProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       dateReported: today,
     };
     setMaintenanceLogs(prev => [newLog, ...prev]);
+    showToast(`Laporan kerusakan ${log.itemName} berhasil dibuat.`, 'warning');
   };
 
   const updateMaintenanceStatus = (id: string, status: MaintenanceLog['status'], resolutionNotes?: string) => {
@@ -524,6 +584,7 @@ export const PerkabProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       status,
       resolutionNotes: resolutionNotes || m.resolutionNotes,
     } : m));
+    showToast('Status perbaikan barang berhasil diperbarui.', 'success');
   };
 
   // Supabase Config update
@@ -540,6 +601,7 @@ export const PerkabProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           if (!error) {
             setSupabaseConfigState({ ...newConfig, isConnected: true });
             saveSupabaseConfig({ ...newConfig, isConnected: true });
+            showToast('Koneksi Supabase Cloud Berhasil Aktif!', 'success');
             return true;
           }
         }
@@ -549,6 +611,7 @@ export const PerkabProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     }
     setSupabaseConfigState({ ...newConfig, isConnected: false });
     saveSupabaseConfig({ ...newConfig, isConnected: false });
+    showToast('Gagal terhubung ke Supabase Cloud.', 'error');
     return false;
   };
 
@@ -562,6 +625,7 @@ export const PerkabProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     setEventSetups(INITIAL_EVENT_SETUPS);
     setTransports(INITIAL_TRANSPORTS);
     setMaintenanceLogs(INITIAL_MAINTENANCE_LOGS);
+    showToast('Data berhasil di-reset ke data awal.', 'info');
   };
 
   const clearAllData = async (clearSupabase: boolean = true) => {
@@ -601,6 +665,7 @@ export const PerkabProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         }
       }
     }
+    showToast('Semua data berhasil dibersihkan dari aplikasi & database!', 'success', 'Database Kosong');
   };
 
   return (
@@ -609,6 +674,13 @@ export const PerkabProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         currentUser,
         login,
         logout,
+
+        toasts,
+        showToast,
+        removeToast,
+        confirmOptions,
+        showConfirm,
+        closeConfirm,
 
         users,
         addUser,

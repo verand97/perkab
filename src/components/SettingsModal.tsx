@@ -20,7 +20,13 @@ interface SettingsModalProps {
 }
 
 export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
-  const { supabaseConfig, updateSupabaseConfig, resetToSampleData, clearAllData } = usePerkab();
+  const {
+    supabaseConfig,
+    updateSupabaseConfig,
+    resetToSampleData,
+    clearAllData,
+    showConfirm,
+  } = usePerkab();
 
   const [url, setUrl] = useState(supabaseConfig.url || '');
   const [anonKey, setAnonKey] = useState(supabaseConfig.anonKey || '');
@@ -63,12 +69,30 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
     setTimeout(() => setIsCopied(false), 2000);
   };
 
-  const handleClearAll = async () => {
-    if (confirm('PERINGATAN: Apakah Anda yakin ingin MENGOSONGKAN DAN BERSIHKAN SEMUA DATA (Inventaris, Peminjaman, Posko, Transport, Proker, Kerusakan)? Data lokal dan database cloud akan dihapus.')) {
-      await clearAllData(true);
-      alert('Semua data berhasil dibersihkan! Database dan aplikasi kini kosong dan siap diisi data riil.');
-      onClose();
-    }
+  const handleClearAll = () => {
+    showConfirm({
+      title: 'Kosongkan Semua Data',
+      message: 'PERINGATAN: Apakah Anda yakin ingin MENGOSONGKAN DAN BERSIHKAN SEMUA DATA (Inventaris, Peminjaman, Posko, Transport, Proker, Kerusakan)? Data lokal dan database cloud akan dihapus.',
+      confirmText: 'Ya, Bersihkan Semua Data',
+      danger: true,
+      onConfirm: async () => {
+        await clearAllData(true);
+        onClose();
+      },
+    });
+  };
+
+  const handleResetDemo = () => {
+    showConfirm({
+      title: 'Reset Demo Data',
+      message: 'Apakah Anda yakin ingin mengembalikan data ke contoh awal simulasi KKN?',
+      confirmText: 'Ya, Reset Demo Data',
+      danger: false,
+      onConfirm: () => {
+        resetToSampleData();
+        onClose();
+      },
+    });
   };
 
   return (
@@ -208,12 +232,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
             </button>
 
             <button
-              onClick={() => {
-                if (confirm('Reset data ke data simulasi / contoh awal KKN?')) {
-                  resetToSampleData();
-                  onClose();
-                }
-              }}
+              onClick={handleResetDemo}
               className="flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 text-xs font-semibold"
             >
               <RotateCcw className="w-3.5 h-3.5" />

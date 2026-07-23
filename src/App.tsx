@@ -13,6 +13,18 @@ import { MaintenanceView } from './components/MaintenanceView';
 import { UserManagementView } from './components/UserManagementView';
 import { ExportModal } from './components/ExportModal';
 import { SettingsModal } from './components/SettingsModal';
+import { ToastContainer } from './components/ToastContainer';
+import { ConfirmModal } from './components/ConfirmModal';
+
+const GlobalOverlay: React.FC = () => {
+  const { toasts, removeToast, confirmOptions, closeConfirm } = usePerkab();
+  return (
+    <>
+      <ToastContainer toasts={toasts} onRemoveToast={removeToast} />
+      <ConfirmModal options={confirmOptions} onClose={closeConfirm} />
+    </>
+  );
+};
 
 const AppContent: React.FC = () => {
   const [activeTab, setActiveTab] = useState<TabType>('dashboard');
@@ -27,9 +39,14 @@ const AppContent: React.FC = () => {
     maintenanceLogs,
   } = usePerkab();
 
-  // If not logged in, render sleek Login Screen
+  // If not logged in, render sleek Login Screen with global toast/confirm overlays
   if (!currentUser) {
-    return <LoginScreen />;
+    return (
+      <>
+        <LoginScreen />
+        <GlobalOverlay />
+      </>
+    );
   }
 
   const activeBorrowingsCount = borrowings.filter(b => b.status === 'Dipinjam').length;
@@ -97,9 +114,10 @@ const AppContent: React.FC = () => {
         </div>
       </footer>
 
-      {/* Modals */}
+      {/* Modals & Global Toast / Confirm Overlays */}
       <ExportModal isOpen={isExportOpen} onClose={() => setIsExportOpen(false)} />
       <SettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
+      <GlobalOverlay />
     </div>
   );
 };

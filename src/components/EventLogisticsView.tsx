@@ -22,6 +22,7 @@ export const EventLogisticsView: React.FC = () => {
     updateEventStatus,
     toggleEventChecklistItem,
     deleteEventSetup,
+    showConfirm,
   } = usePerkab();
 
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -180,9 +181,13 @@ export const EventLogisticsView: React.FC = () => {
 
                   <button
                     onClick={() => {
-                      if (confirm(`Hapus setup proker "${evt.eventName}"?`)) {
-                        deleteEventSetup(evt.id);
-                      }
+                      showConfirm({
+                        title: 'Hapus Setup Proker',
+                        message: `Apakah Anda yakin ingin menghapus jadwal persiapan proker "${evt.eventName}"?`,
+                        confirmText: 'Ya, Hapus Proker',
+                        danger: true,
+                        onConfirm: () => deleteEventSetup(evt.id),
+                      });
                     }}
                     className="p-2 rounded-xl bg-slate-800 hover:bg-rose-900/60 text-slate-400 hover:text-rose-300 border border-slate-700"
                     title="Hapus Proker Setup"

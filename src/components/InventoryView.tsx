@@ -27,6 +27,7 @@ export const InventoryView: React.FC<InventoryViewProps> = () => {
     addInventoryItem,
     updateInventoryItem,
     deleteInventoryItem,
+    showConfirm,
   } = usePerkab();
 
   const [searchQuery, setSearchQuery] = useState('');
@@ -375,9 +376,13 @@ export const InventoryView: React.FC<InventoryViewProps> = () => {
                       </button>
                       <button
                         onClick={() => {
-                          if (confirm(`Hapus barang "${item.name}" dari inventaris?`)) {
-                            deleteInventoryItem(item.id);
-                          }
+                          showConfirm({
+                            title: 'Hapus Barang Inventaris',
+                            message: `Apakah Anda yakin ingin menghapus barang "${item.name}" (${item.code}) dari katalog logistik?`,
+                            confirmText: 'Ya, Hapus Barang',
+                            danger: true,
+                            onConfirm: () => deleteInventoryItem(item.id),
+                          });
                         }}
                         className="p-1.5 rounded-lg bg-slate-800 hover:bg-rose-900/60 text-slate-400 hover:text-rose-300 border border-slate-700"
                         title="Hapus Barang"

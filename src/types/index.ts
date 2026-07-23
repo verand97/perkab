@@ -130,3 +130,21 @@ export interface UserAccount {
   position?: string;
   created_at?: string;
 }
+
+export type ToastType = 'success' | 'error' | 'info' | 'warning';
+
+export interface ToastMessage {
+  id: string;
+  type: ToastType;
+  title?: string;
+  message: string;
+}
+
+export interface ConfirmDialogOptions {
+  title: string;
+  message: string;
+  confirmText?: string;
+  cancelText?: string;
+  danger?: boolean;
+  onConfirm: () => void;
+}

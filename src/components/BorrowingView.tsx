@@ -24,6 +24,7 @@ export const BorrowingView: React.FC = () => {
     addBorrowingRecord,
     returnBorrowingItem,
     deleteBorrowingRecord,
+    showConfirm,
   } = usePerkab();
 
   const [activeTab, setActiveTab] = useState<'DIPINJAM' | 'DIKEMBALIKAN' | 'ALL'>('DIPINJAM');
@@ -343,9 +344,13 @@ export const BorrowingView: React.FC = () => {
 
                 <button
                   onClick={() => {
-                    if (confirm(`Hapus data peminjaman ${bor.itemName}?`)) {
-                      deleteBorrowingRecord(bor.id);
-                    }
+                    showConfirm({
+                      title: 'Hapus Peminjaman Alat',
+                      message: `Apakah Anda yakin ingin menghapus data peminjaman "${bor.itemName}" (${bor.lenderName})?`,
+                      confirmText: 'Ya, Hapus Record',
+                      danger: true,
+                      onConfirm: () => deleteBorrowingRecord(bor.id),
+                    });
                   }}
                   className="p-2 rounded-xl bg-slate-800 hover:bg-rose-900/60 text-slate-400 hover:text-rose-300 border border-slate-700"
                   title="Hapus Record"

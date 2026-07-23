@@ -21,6 +21,7 @@ export const TransportView: React.FC = () => {
     addTransportRecord,
     updateTransportStatus,
     deleteTransportRecord,
+    showConfirm,
   } = usePerkab();
 
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -187,9 +188,13 @@ export const TransportView: React.FC = () => {
             <div className="pt-3 border-t border-slate-800 flex justify-end">
               <button
                 onClick={() => {
-                  if (confirm(`Hapus jadwal mobilisasi ${trp.vehicleName}?`)) {
-                    deleteTransportRecord(trp.id);
-                  }
+                  showConfirm({
+                    title: 'Hapus Jadwal Transportasi',
+                    message: `Apakah Anda yakin ingin menghapus jadwal armada "${trp.vehicleName}"?`,
+                    confirmText: 'Ya, Hapus Armada',
+                    danger: true,
+                    onConfirm: () => deleteTransportRecord(trp.id),
+                  });
                 }}
                 className="p-1.5 rounded-lg bg-slate-800 hover:bg-rose-900/60 text-slate-400 hover:text-rose-300 border border-slate-700"
                 title="Hapus Transport"
