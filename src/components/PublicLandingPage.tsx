@@ -298,14 +298,6 @@ export const PublicLandingPage: React.FC<PublicLandingPageProps> = ({ onLoginCli
               <p className="text-slate-400 mt-3 max-w-md leading-relaxed text-sm">
                 Pantau seluruh modul perlengkapan, akomodasi, dan logistik kelompok KKN. <strong className="text-slate-200">Klik modul mana saja di bawah ini untuk melihat detail data publik.</strong>
               </p>
-              <button
-                onClick={onLoginClick}
-                className="mt-5 flex items-center gap-2 px-5 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white font-bold text-sm transition-all shadow-xl shadow-emerald-600/25 group w-fit"
-              >
-                <LogIn className="w-4 h-4" />
-                Masuk ke Dashboard Admin
-                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-              </button>
             </div>
 
             {/* Health Meter */}
@@ -458,27 +450,6 @@ export const PublicLandingPage: React.FC<PublicLandingPageProps> = ({ onLoginCli
           </div>
         </div>
 
-        {/* ── CTA BOTTOM ────────────────────────────────────────────── */}
-        <div className="relative overflow-hidden glass-card rounded-2xl p-8 border border-emerald-500/20 text-center">
-          <div className="absolute inset-0 bg-linear-to-br from-emerald-500/5 via-transparent to-violet-500/5 pointer-events-none" />
-          <div className="relative">
-            <div className="inline-flex p-3 rounded-2xl bg-emerald-500/15 border border-emerald-500/20 mb-4">
-              <Shield className="w-6 h-6 text-emerald-400" />
-            </div>
-            <h3 className="text-xl font-black text-white mb-2">Kelola Logistik KKN Lebih Efisien</h3>
-            <p className="text-slate-400 text-sm mb-5 max-w-md mx-auto">
-              Login sebagai anggota atau admin untuk mencatat, memperbarui, dan mengelola semua data logistik kelompok KKN.
-            </p>
-            <button
-              onClick={onLoginClick}
-              className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white font-bold transition-all shadow-xl shadow-emerald-600/25 group"
-            >
-              <LogIn className="w-4 h-4" />
-              Masuk ke Dashboard Admin
-              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-            </button>
-          </div>
-        </div>
       </main>
 
       {/* ── FOOTER ───────────────────────────────────────────────────── */}
@@ -578,16 +549,15 @@ export const PublicLandingPage: React.FC<PublicLandingPageProps> = ({ onLoginCli
             </div>
 
             {/* Modal Footer */}
-            <div className="p-4 border-t border-slate-800 glass-card flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
-              <div className="text-slate-400 text-[11px] text-center sm:text-left">
-                🔒 Ingin menambah atau memperbarui data ini? Login ke Dashboard Admin.
+            <div className="p-4 border-t border-slate-800 glass-card flex items-center justify-between gap-3 text-xs">
+              <div className="text-slate-400 text-[11px]">
+                Menampilkan data publik real-time logistik KKN 2026
               </div>
               <button
-                onClick={() => { setSelectedModule(null); onLoginClick(); }}
-                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs transition-all shadow-lg shrink-0"
+                onClick={() => setSelectedModule(null)}
+                className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold text-xs transition-colors shrink-0"
               >
-                <LogIn className="w-3.5 h-3.5" />
-                Login ke Dashboard
+                Tutup
               </button>
             </div>
           </div>
