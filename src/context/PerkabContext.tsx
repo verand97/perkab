@@ -353,7 +353,21 @@ export const PerkabProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         console.log('Supabase sync info:', e);
       }
     }
+
+    // Sync immediately
     syncRemote();
+
+    // Auto-sync every 10 seconds for multi-device real-time sync (Mobile <-> Desktop)
+    const intervalId = setInterval(syncRemote, 10000);
+
+    // Auto-sync when window regains focus (e.g. User switches back to laptop tab)
+    const handleFocus = () => syncRemote();
+    window.addEventListener('focus', handleFocus);
+
+    return () => {
+      clearInterval(intervalId);
+      window.removeEventListener('focus', handleFocus);
+    };
   }, [supabaseConfig]);
 
   // Auth Handlers

@@ -72,6 +72,7 @@ export const PublicLandingPage: React.FC<PublicLandingPageProps> = ({ onLoginCli
 
   const [selectedModule, setSelectedModule] = useState<ModuleKey | null>(null);
   const [modalSearch, setModalSearch]       = useState('');
+  const [selectedItemModal, setSelectedItemModal] = useState<{ type: string; title: string; item: any } | null>(null);
 
   const stats = useMemo(() => ({
     inventory:   {
@@ -470,36 +471,36 @@ export const PublicLandingPage: React.FC<PublicLandingPageProps> = ({ onLoginCli
       {/* ── PUBLIC READ-ONLY MODULE DETAIL MODAL ────────────────────────── */}
       {selectedModule && activeModuleObj && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-md"
+          className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/75 backdrop-blur-md"
           onClick={e => { if (e.target === e.currentTarget) setSelectedModule(null); }}
         >
-          <div className="glass-card w-full max-w-4xl rounded-3xl border border-slate-700/80 shadow-2xl overflow-hidden flex flex-col max-h-[85vh] animate-in fade-in slide-in-from-bottom-4 duration-300">
-            {/* Modal Header */}
-            <div className="p-5 border-b border-slate-800 flex items-center justify-between gap-4 glass-card">
-              <div className="flex items-center gap-3">
-                <div className={`p-3 rounded-2xl ${activeModuleObj.iconBg} border border-white/10`}>
-                  <activeModuleObj.icon className="w-6 h-6" />
+          <div className="glass-card w-full max-w-4xl rounded-3xl border border-slate-700/80 shadow-2xl overflow-hidden flex flex-col max-h-[90vh] sm:max-h-[85vh] animate-in fade-in slide-in-from-bottom-4 duration-300">
+            {/* Modal Header (Responsive for Mobile HP) */}
+            <div className="p-4 sm:p-5 border-b border-slate-800 flex items-start justify-between gap-3 glass-card">
+              <div className="flex items-start gap-3 min-w-0">
+                <div className={`p-2.5 sm:p-3 rounded-2xl ${activeModuleObj.iconBg} border border-white/10 shrink-0`}>
+                  <activeModuleObj.icon className="w-5 h-5 sm:w-6 sm:h-6" />
                 </div>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <h2 className="text-lg font-bold text-white">{activeModuleObj.label}</h2>
-                    <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-                      Detail Publik (Read-Only)
+                <div className="min-w-0">
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
+                    <h2 className="text-base sm:text-lg font-bold text-white leading-snug">{activeModuleObj.label}</h2>
+                    <span className="w-fit text-[9px] sm:text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 whitespace-nowrap">
+                      Publik (Read-Only)
                     </span>
                   </div>
-                  <p className="text-xs text-slate-400 mt-0.5">{activeModuleObj.desc}</p>
+                  <p className="text-[11px] sm:text-xs text-slate-400 mt-0.5 line-clamp-1">{activeModuleObj.desc}</p>
                 </div>
               </div>
               <button
                 onClick={() => setSelectedModule(null)}
-                className="p-2 rounded-xl hover:bg-slate-700 text-slate-400 hover:text-white transition-colors"
+                className="p-1.5 sm:p-2 rounded-xl hover:bg-slate-700 text-slate-400 hover:text-white transition-colors shrink-0"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             {/* Modal Search Bar */}
-            <div className="px-5 py-3 bg-slate-900/60 border-b border-slate-800 flex items-center gap-3">
+            <div className="px-4 sm:px-5 py-3 bg-slate-900/60 border-b border-slate-800 flex items-center gap-3">
               <Search className="w-4 h-4 text-slate-400 shrink-0" />
               <input
                 type="text"
@@ -516,42 +517,68 @@ export const PublicLandingPage: React.FC<PublicLandingPageProps> = ({ onLoginCli
             </div>
 
             {/* Modal Body / Items List */}
-            <div className="p-5 overflow-y-auto flex-1 space-y-4">
+            <div className="p-4 sm:p-5 overflow-y-auto flex-1 space-y-4">
               {/* 1. Inventory */}
               {selectedModule === 'inventory' && (
-                <InventoryDetailView inventory={inventory} search={modalSearch} />
+                <InventoryDetailView
+                  inventory={inventory}
+                  search={modalSearch}
+                  onItemClick={item => setSelectedItemModal({ type: 'inventory', title: 'Detail Inventaris Barang', item })}
+                />
               )}
 
               {/* 2. Borrowings */}
               {selectedModule === 'borrowings' && (
-                <BorrowingDetailView borrowings={borrowings} search={modalSearch} />
+                <BorrowingDetailView
+                  borrowings={borrowings}
+                  search={modalSearch}
+                  onItemClick={item => setSelectedItemModal({ type: 'borrowing', title: 'Detail Peminjaman Alat', item })}
+                />
               )}
 
               {/* 3. Posko & Facilities */}
               {selectedModule === 'posko' && (
-                <PoskoDetailView facilities={facilities} rooms={rooms} search={modalSearch} />
+                <PoskoDetailView
+                  facilities={facilities}
+                  rooms={rooms}
+                  search={modalSearch}
+                  onFacilityClick={item => setSelectedItemModal({ type: 'facility', title: 'Detail Fasilitas Posko', item })}
+                  onRoomClick={item => setSelectedItemModal({ type: 'room', title: 'Detail Tata Letak Kamar', item })}
+                />
               )}
 
               {/* 4. Events / Persiapan Tempat */}
               {selectedModule === 'events' && (
-                <EventDetailView eventSetups={eventSetups} search={modalSearch} />
+                <EventDetailView
+                  eventSetups={eventSetups}
+                  search={modalSearch}
+                  onItemClick={item => setSelectedItemModal({ type: 'event', title: 'Detail Persiapan Acara', item })}
+                />
               )}
 
               {/* 5. Transports */}
               {selectedModule === 'transport' && (
-                <TransportDetailView transports={transports} search={modalSearch} />
+                <TransportDetailView
+                  transports={transports}
+                  search={modalSearch}
+                  onItemClick={item => setSelectedItemModal({ type: 'transport', title: 'Detail Mobilisasi Armada', item })}
+                />
               )}
 
               {/* 6. Maintenance */}
               {selectedModule === 'maintenance' && (
-                <MaintenanceDetailView maintenanceLogs={maintenanceLogs} search={modalSearch} />
+                <MaintenanceDetailView
+                  maintenanceLogs={maintenanceLogs}
+                  search={modalSearch}
+                  onItemClick={item => setSelectedItemModal({ type: 'maintenance', title: 'Detail Pemeliharaan Barang', item })}
+                />
               )}
             </div>
 
             {/* Modal Footer */}
-            <div className="p-4 border-t border-slate-800 glass-card flex items-center justify-between gap-3 text-xs">
-              <div className="text-slate-400 text-[11px]">
-                Menampilkan data publik real-time logistik KKN 2026
+            <div className="p-3.5 sm:p-4 border-t border-slate-800 glass-card flex items-center justify-between gap-3 text-xs">
+              <div className="text-slate-400 text-[10px] sm:text-[11px] truncate">
+                💡 Klik barang/item mana saja di atas untuk rincian lengkap
               </div>
               <button
                 onClick={() => setSelectedModule(null)}
@@ -564,14 +591,200 @@ export const PublicLandingPage: React.FC<PublicLandingPageProps> = ({ onLoginCli
         </div>
       )}
 
+      {/* ── SINGLE ITEM FULL DETAIL POPUP MODAL ────────────────────────── */}
+      {selectedItemModal && (
+        <div
+          className="fixed inset-0 z-60 flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-md"
+          onClick={e => { if (e.target === e.currentTarget) setSelectedItemModal(null); }}
+        >
+          <div className="glass-card w-full max-w-lg rounded-3xl border border-slate-700/80 shadow-2xl overflow-hidden p-5 sm:p-6 space-y-4 animate-in fade-in zoom-in-95 duration-200">
+            {/* Modal Header */}
+            <div className="flex items-start justify-between gap-3 border-b border-slate-800 pb-3">
+              <div>
+                <span className="text-[9px] sm:text-[10px] font-extrabold uppercase px-2.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+                  {selectedItemModal.title}
+                </span>
+                <h3 className="text-base sm:text-lg font-black text-white mt-1.5 leading-snug">
+                  {selectedItemModal.item.name ||
+                   selectedItemModal.item.itemName ||
+                   selectedItemModal.item.facilityName ||
+                   selectedItemModal.item.eventName ||
+                   selectedItemModal.item.vehicleName ||
+                   selectedItemModal.item.roomName}
+                </h3>
+              </div>
+              <button
+                onClick={() => setSelectedItemModal(null)}
+                className="p-1.5 rounded-xl hover:bg-slate-800 text-slate-400 hover:text-white transition-colors shrink-0"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Field Details */}
+            <div className="space-y-2 text-xs max-h-[60vh] overflow-y-auto pr-1">
+              {/* Inventory Type */}
+              {selectedItemModal.type === 'inventory' && (
+                <>
+                  <DetailRow label="Kode Barang" value={selectedItemModal.item.code} fontMono />
+                  <DetailRow label="Kategori" value={selectedItemModal.item.category} />
+                  <DetailRow label="Jumlah Total" value={`${selectedItemModal.item.quantity} ${selectedItemModal.item.unit}`} />
+                  <DetailRow label="Tersedia" value={`${selectedItemModal.item.availableQty} ${selectedItemModal.item.unit}`} highlightColor="text-emerald-400" />
+                  <DetailRow label="Kondisi" value={selectedItemModal.item.condition} />
+                  <DetailRow label="Kepemilikan" value={selectedItemModal.item.ownership} />
+                  {selectedItemModal.item.lenderName && <DetailRow label="Pemilik/Pemberi" value={selectedItemModal.item.lenderName} />}
+                  <DetailRow label="Lokasi Penyimpanan" value={selectedItemModal.item.location} />
+                  {selectedItemModal.item.notes && <DetailRow label="Catatan" value={selectedItemModal.item.notes} />}
+                </>
+              )}
+
+              {/* Borrowing Type */}
+              {selectedItemModal.type === 'borrowing' && (
+                <>
+                  <DetailRow label="Status Peminjaman" value={selectedItemModal.item.status} highlightColor={
+                    selectedItemModal.item.status === 'Dikembalikan' ? 'text-emerald-400' :
+                    selectedItemModal.item.status === 'Terlambat' ? 'text-rose-400' : 'text-amber-400'
+                  } />
+                  <DetailRow label="Nama Peminjam" value={selectedItemModal.item.borrowerName} />
+                  {selectedItemModal.item.borrowerContact && <DetailRow label="Kontak Peminjam" value={selectedItemModal.item.borrowerContact} />}
+                  <DetailRow label="Pemberi Pinjam/Pemilik" value={selectedItemModal.item.lenderName} />
+                  {selectedItemModal.item.lenderPhone && <DetailRow label="HP Pemilik" value={selectedItemModal.item.lenderPhone} />}
+                  <DetailRow label="Jumlah Dipinjam" value={`${selectedItemModal.item.quantity} unit`} />
+                  <DetailRow label="Tanggal Pinjam" value={selectedItemModal.item.borrowDate} />
+                  <DetailRow label="Tanggal Jatuh Tempo" value={selectedItemModal.item.dueDate || selectedItemModal.item.expectedReturnDate || '-'} />
+                  {selectedItemModal.item.returnDate && <DetailRow label="Dikembalikan Pada" value={selectedItemModal.item.returnDate} highlightColor="text-emerald-400" />}
+                  {selectedItemModal.item.conditionOnReturn && <DetailRow label="Kondisi Kembali" value={selectedItemModal.item.conditionOnReturn} />}
+                  <DetailRow label="Biaya Jaminan/DP" value={selectedItemModal.item.depositCost ? `Rp ${Number(selectedItemModal.item.depositCost).toLocaleString('id-ID')}` : 'Tidak Ada'} />
+                  {selectedItemModal.item.notes && <DetailRow label="Catatan" value={selectedItemModal.item.notes} />}
+                </>
+              )}
+
+              {/* Facility Type */}
+              {selectedItemModal.type === 'facility' && (
+                <>
+                  <DetailRow label="Fasilitas" value={selectedItemModal.item.facilityName} />
+                  <DetailRow label="Kategori" value={selectedItemModal.item.category || selectedItemModal.item.facilityType || 'Fasilitas'} />
+                  <DetailRow label="Kondisi Status" value={selectedItemModal.item.status} highlightColor={
+                    selectedItemModal.item.status === 'Sangat Baik' ? 'text-emerald-400' : 'text-amber-400'
+                  } />
+                  <DetailRow label="Penanggung Jawab (PIC)" value={selectedItemModal.item.picName} />
+                  <DetailRow label="Terakhir Dicek" value={selectedItemModal.item.lastChecked || '-'} />
+                  <DetailRow label="Rincian" value={selectedItemModal.item.details || '-'} />
+                </>
+              )}
+
+              {/* Room Type */}
+              {selectedItemModal.type === 'room' && (
+                <>
+                  <DetailRow label="Nama Kamar/Area" value={selectedItemModal.item.roomName} />
+                  <DetailRow label="Kapasitas" value={`${selectedItemModal.item.capacity} orang`} />
+                  <DetailRow label="Penghuni Terdaftar" value={
+                    Array.isArray(selectedItemModal.item.occupants) && selectedItemModal.item.occupants.length > 0
+                      ? selectedItemModal.item.occupants.join(', ')
+                      : (selectedItemModal.item.currentOccupants || 'Belum Diisi')
+                  } />
+                  {Array.isArray(selectedItemModal.item.assignedEquipment) && selectedItemModal.item.assignedEquipment.length > 0 && (
+                    <DetailRow label="Fasilitas Kamar" value={selectedItemModal.item.assignedEquipment.join(', ')} />
+                  )}
+                  {selectedItemModal.item.notes && <DetailRow label="Catatan" value={selectedItemModal.item.notes} />}
+                </>
+              )}
+
+              {/* Event Type */}
+              {selectedItemModal.type === 'event' && (
+                <>
+                  <DetailRow label="Proker Acara" value={selectedItemModal.item.eventName || selectedItemModal.item.eventTitle} />
+                  <DetailRow label="Status Persiapan" value={selectedItemModal.item.setupStatus} highlightColor="text-teal-400" />
+                  <DetailRow label="Tanggal Pelaksanaan" value={selectedItemModal.item.eventDate} />
+                  <DetailRow label="Lokasi Acara" value={selectedItemModal.item.location} />
+                  <DetailRow label="Penanggung Jawab (PIC)" value={selectedItemModal.item.picName || 'PJ Event'} />
+                  {selectedItemModal.item.notes && <DetailRow label="Catatan" value={selectedItemModal.item.notes} />}
+
+                  {/* Checklist */}
+                  {Array.isArray(selectedItemModal.item.requiredItems || selectedItemModal.item.itemsChecklist) && (
+                    <div className="pt-2 border-t border-slate-800 space-y-1.5">
+                      <div className="text-[11px] font-bold text-slate-300">Checklist Perlengkapan Acara:</div>
+                      <div className="space-y-1 bg-slate-950/60 p-2.5 rounded-xl">
+                        {(selectedItemModal.item.requiredItems || selectedItemModal.item.itemsChecklist).map((ci: any, idx: number) => (
+                          <div key={idx} className="flex items-center justify-between text-[11px]">
+                            <span className={ci.isReady ? 'text-slate-300 line-through' : 'text-slate-400'}>
+                              {ci.itemName || ci.itemNeeded} ({ci.qty || ci.quantity})
+                            </span>
+                            <span className={`font-bold ${ci.isReady ? 'text-emerald-400' : 'text-amber-400'}`}>
+                              {ci.isReady ? '✓ Siap' : '⏳ Belum'}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
+
+              {/* Transport Type */}
+              {selectedItemModal.type === 'transport' && (
+                <>
+                  <DetailRow label="Nama Kendaraan" value={`${selectedItemModal.item.vehicleName} (${selectedItemModal.item.vehicleType || 'Mobil'})`} />
+                  <DetailRow label="Status Armada" value={selectedItemModal.item.status} highlightColor="text-violet-400" />
+                  <DetailRow label="Pengemudi / PJ" value={selectedItemModal.item.driverName} />
+                  <DetailRow label="Tujuan / Tugas" value={selectedItemModal.item.purpose || selectedItemModal.item.route} />
+                  <DetailRow label="Tanggal Keberangkatan" value={selectedItemModal.item.departureDate} />
+                  {selectedItemModal.item.returnDate && <DetailRow label="Tanggal Kepulangan" value={selectedItemModal.item.returnDate} />}
+                  <DetailRow label="Rincian Muatan" value={selectedItemModal.item.cargoDetails || '-'} />
+                  <DetailRow label="Estimasi Biaya" value={selectedItemModal.item.cost ? `Rp ${Number(selectedItemModal.item.cost).toLocaleString('id-ID')}` : 'Rp 0'} />
+                </>
+              )}
+
+              {/* Maintenance Type */}
+              {selectedItemModal.type === 'maintenance' && (
+                <>
+                  <DetailRow label="Nama Barang" value={selectedItemModal.item.itemName} />
+                  <DetailRow label="Status Perbaikan" value={selectedItemModal.item.status} highlightColor={
+                    selectedItemModal.item.status === 'Selesai Perbaikan' ? 'text-emerald-400' : 'text-rose-400'
+                  } />
+                  <DetailRow label="Dilaporkan Oleh" value={selectedItemModal.item.reportedBy} />
+                  <DetailRow label="Tanggal Laporan" value={selectedItemModal.item.dateReported || '-'} />
+                  <DetailRow label="Deskripsi Kerusakan" value={selectedItemModal.item.damageDescription || selectedItemModal.item.issueDescription || '-'} />
+                  <DetailRow label="Estimasi Biaya" value={selectedItemModal.item.estimatedCost ? `Rp ${Number(selectedItemModal.item.estimatedCost).toLocaleString('id-ID')}` : 'Rp 0'} />
+                  {selectedItemModal.item.resolutionNotes && (
+                    <DetailRow label="Solusi Penanganan" value={selectedItemModal.item.resolutionNotes} highlightColor="text-emerald-400" />
+                  )}
+                </>
+              )}
+            </div>
+
+            {/* Close Button */}
+            <button
+              onClick={() => setSelectedItemModal(null)}
+              className="w-full py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs transition-colors mt-2"
+            >
+              Tutup Rincian
+            </button>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 };
 
+const DetailRow: React.FC<{ label: string; value: string; fontMono?: boolean; highlightColor?: string }> = ({
+  label, value, fontMono, highlightColor,
+}) => (
+  <div className="flex items-start justify-between gap-3 bg-slate-900/60 p-2.5 rounded-xl border border-slate-800/80">
+    <span className="text-slate-400 text-[11px] shrink-0 font-medium">{label}</span>
+    <span className={`text-xs font-bold text-right leading-tight ${fontMono ? 'font-mono' : ''} ${highlightColor || 'text-slate-100'}`}>
+      {value}
+    </span>
+  </div>
+);
+
 // ── DETAIL SUB-COMPONENTS ───────────────────────────────────────────────────
 
 // 1. Inventory Detail
-const InventoryDetailView: React.FC<{ inventory: any[]; search: string }> = ({ inventory, search }) => {
+const InventoryDetailView: React.FC<{ inventory: any[]; search: string; onItemClick: (item: any) => void }> = ({
+  inventory, search, onItemClick,
+}) => {
   const filtered = inventory.filter(i =>
     !search ||
     i.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -585,13 +798,19 @@ const InventoryDetailView: React.FC<{ inventory: any[]; search: string }> = ({ i
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
       {filtered.map(item => (
-        <div key={item.id} className="bg-slate-900/80 rounded-2xl p-4 border border-slate-800 space-y-2">
+        <div
+          key={item.id}
+          onClick={() => onItemClick(item)}
+          className="group bg-slate-900/80 hover:bg-slate-800/80 rounded-2xl p-4 border border-slate-800 hover:border-emerald-500/40 cursor-pointer transition-all duration-200 space-y-2"
+        >
           <div className="flex items-start justify-between gap-2">
             <div>
               <span className="text-[10px] font-mono text-slate-500">{item.code}</span>
-              <h4 className="font-bold text-slate-100 text-sm leading-snug">{item.name}</h4>
+              <h4 className="font-bold text-slate-100 text-sm leading-snug group-hover:text-emerald-300 transition-colors">
+                {item.name}
+              </h4>
             </div>
-            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
+            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border shrink-0 ${
               item.condition === 'Bagus' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30' :
               item.condition === 'Perlu Perbaikan' ? 'bg-amber-500/10 text-amber-400 border-amber-500/30' :
               'bg-rose-500/10 text-rose-400 border-rose-500/30'
@@ -603,22 +822,18 @@ const InventoryDetailView: React.FC<{ inventory: any[]; search: string }> = ({ i
           <div className="grid grid-cols-2 gap-2 text-xs pt-1">
             <div className="bg-slate-950/60 rounded-xl p-2">
               <div className="text-[10px] text-slate-500">Kategori</div>
-              <div className="font-semibold text-slate-300">{item.category}</div>
+              <div className="font-semibold text-slate-300 truncate">{item.category}</div>
             </div>
             <div className="bg-slate-950/60 rounded-xl p-2">
               <div className="text-[10px] text-slate-500">Tersedia</div>
               <div className="font-bold text-emerald-400">{item.availableQty} <span className="text-slate-500 font-normal">/ {item.quantity} {item.unit}</span></div>
             </div>
-            <div className="bg-slate-950/60 rounded-xl p-2">
-              <div className="text-[10px] text-slate-500">Kepemilikan</div>
-              <div className="font-semibold text-slate-300">{item.ownership}</div>
-            </div>
-            <div className="bg-slate-950/60 rounded-xl p-2">
-              <div className="text-[10px] text-slate-500">Lokasi Simpan</div>
-              <div className="font-semibold text-slate-300 truncate">{item.location}</div>
-            </div>
           </div>
-          {item.notes && <div className="text-[11px] text-slate-400 italic">" {item.notes} "</div>}
+
+          <div className="pt-2 border-t border-slate-800/60 flex items-center justify-between text-[10px] text-emerald-400 font-semibold">
+            <span>Klik rincian lengkap →</span>
+            <span className="text-slate-500 font-normal">{item.location}</span>
+          </div>
         </div>
       ))}
     </div>
@@ -626,7 +841,9 @@ const InventoryDetailView: React.FC<{ inventory: any[]; search: string }> = ({ i
 };
 
 // 2. Borrowing Detail
-const BorrowingDetailView: React.FC<{ borrowings: any[]; search: string }> = ({ borrowings, search }) => {
+const BorrowingDetailView: React.FC<{ borrowings: any[]; search: string; onItemClick: (item: any) => void }> = ({
+  borrowings, search, onItemClick,
+}) => {
   const filtered = borrowings.filter(b =>
     !search ||
     b.itemName.toLowerCase().includes(search.toLowerCase()) ||
@@ -638,10 +855,16 @@ const BorrowingDetailView: React.FC<{ borrowings: any[]; search: string }> = ({ 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
       {filtered.map(b => (
-        <div key={b.id} className="bg-slate-900/80 rounded-2xl p-4 border border-slate-800 space-y-2">
+        <div
+          key={b.id}
+          onClick={() => onItemClick(b)}
+          className="group bg-slate-900/80 hover:bg-slate-800/80 rounded-2xl p-4 border border-slate-800 hover:border-emerald-500/40 cursor-pointer transition-all duration-200 space-y-2"
+        >
           <div className="flex items-start justify-between gap-2">
-            <h4 className="font-bold text-slate-100 text-sm leading-snug">{b.itemName}</h4>
-            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
+            <h4 className="font-bold text-slate-100 text-sm leading-snug group-hover:text-emerald-300 transition-colors">
+              {b.itemName}
+            </h4>
+            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border shrink-0 ${
               b.status === 'Dikembalikan' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30' :
               b.status === 'Terlambat' ? 'bg-rose-500/10 text-rose-400 border-rose-500/30' :
               'bg-amber-500/10 text-amber-400 border-amber-500/30'
@@ -653,17 +876,17 @@ const BorrowingDetailView: React.FC<{ borrowings: any[]; search: string }> = ({ 
           <div className="text-xs space-y-1 pt-1">
             <div className="flex items-center gap-1.5 text-slate-300">
               <User className="w-3.5 h-3.5 text-slate-500 shrink-0" />
-              <span>Peminjam: <strong className="text-white">{b.borrowerName}</strong> ({b.borrowerContact})</span>
+              <span>Peminjam: <strong className="text-white">{b.borrowerName}</strong></span>
             </div>
             <div className="flex items-center gap-1.5 text-slate-400 text-[11px]">
               <Clock className="w-3.5 h-3.5 text-slate-500 shrink-0" />
-              <span>Pinjam: {b.borrowDate} — Kembali: {b.expectedReturnDate}</span>
+              <span>Pinjam: {b.borrowDate} — Jatuh Tempo: {b.dueDate || b.expectedReturnDate || '-'}</span>
             </div>
-            {b.conditionOnReturn && (
-              <div className="text-[11px] text-slate-400">
-                Kondisi Pengembalian: <strong className="text-emerald-400">{b.conditionOnReturn}</strong>
-              </div>
-            )}
+          </div>
+
+          <div className="pt-2 border-t border-slate-800/60 flex items-center justify-between text-[10px] text-emerald-400 font-semibold">
+            <span>Klik rincian lengkap →</span>
+            <span className="text-slate-500 font-normal">{b.quantity} unit</span>
           </div>
         </div>
       ))}
@@ -672,7 +895,13 @@ const BorrowingDetailView: React.FC<{ borrowings: any[]; search: string }> = ({ 
 };
 
 // 3. Posko Detail
-const PoskoDetailView: React.FC<{ facilities: any[]; rooms: any[]; search: string }> = ({ facilities, rooms, search }) => {
+const PoskoDetailView: React.FC<{
+  facilities: any[];
+  rooms: any[];
+  search: string;
+  onFacilityClick: (item: any) => void;
+  onRoomClick: (item: any) => void;
+}> = ({ facilities, rooms, search, onFacilityClick, onRoomClick }) => {
   const filteredFac = facilities.filter(f =>
     !search ||
     f.facilityName.toLowerCase().includes(search.toLowerCase()) ||
@@ -683,19 +912,23 @@ const PoskoDetailView: React.FC<{ facilities: any[]; rooms: any[]; search: strin
   return (
     <div className="space-y-4">
       <div>
-        <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">Fasilitas Posko</h4>
+        <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">Fasilitas Posko (Klik untuk Detail)</h4>
         {filteredFac.length === 0 ? (
           <EmptyDetailState message="Tidak ada fasilitas terpantau." />
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {filteredFac.map(f => (
-              <div key={f.id} className="bg-slate-900/80 rounded-2xl p-4 border border-slate-800 space-y-2">
+              <div
+                key={f.id}
+                onClick={() => onFacilityClick(f)}
+                className="group bg-slate-900/80 hover:bg-slate-800/80 rounded-2xl p-4 border border-slate-800 hover:border-emerald-500/40 cursor-pointer transition-all duration-200 space-y-2"
+              >
                 <div className="flex items-start justify-between gap-2">
                   <div>
                     <span className="text-[10px] text-sky-400 font-bold uppercase">{f.category || f.facilityType || 'Fasilitas'}</span>
-                    <h5 className="font-bold text-slate-100 text-sm leading-snug">{f.facilityName}</h5>
+                    <h5 className="font-bold text-slate-100 text-sm leading-snug group-hover:text-emerald-300 transition-colors">{f.facilityName}</h5>
                   </div>
-                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
+                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border shrink-0 ${
                     f.status === 'Sangat Baik' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30' :
                     'bg-amber-500/10 text-amber-400 border-amber-500/30'
                   }`}>
@@ -704,8 +937,10 @@ const PoskoDetailView: React.FC<{ facilities: any[]; rooms: any[]; search: strin
                 </div>
                 <div className="text-xs text-slate-400 space-y-0.5 pt-1">
                   <div>PIC: <strong className="text-slate-200">{f.picName}</strong></div>
-                  <div>Rincian: {f.details}</div>
-                  <div className="text-[10px] text-slate-500">Terakhir dicek: {f.lastChecked}</div>
+                  <div className="line-clamp-1">Rincian: {f.details}</div>
+                </div>
+                <div className="pt-2 border-t border-slate-800/60 flex items-center justify-between text-[10px] text-emerald-400 font-semibold">
+                  <span>Klik rincian lengkap →</span>
                 </div>
               </div>
             ))}
@@ -718,11 +953,18 @@ const PoskoDetailView: React.FC<{ facilities: any[]; rooms: any[]; search: strin
           <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">Tata Letak Kamar Posko</h4>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             {rooms.map(r => (
-              <div key={r.id} className="bg-slate-900/60 rounded-2xl p-3.5 border border-slate-800">
-                <h5 className="font-bold text-slate-100 text-xs">{r.roomName}</h5>
+              <div
+                key={r.id}
+                onClick={() => onRoomClick(r)}
+                className="group bg-slate-900/60 hover:bg-slate-800/80 rounded-2xl p-3.5 border border-slate-800 hover:border-emerald-500/40 cursor-pointer transition-all duration-200"
+              >
+                <h5 className="font-bold text-slate-100 text-xs group-hover:text-emerald-300 transition-colors">{r.roomName}</h5>
                 <div className="text-[11px] text-slate-400 mt-1">Kapasitas: <strong className="text-sky-400">{r.capacity} orang</strong></div>
-                <div className="text-[10px] text-slate-500 mt-0.5">
+                <div className="text-[10px] text-slate-500 mt-0.5 line-clamp-1">
                   {Array.isArray(r.occupants) && r.occupants.length > 0 ? r.occupants.join(', ') : (r.currentOccupants || 'Penghuni Belum Diisi')}
+                </div>
+                <div className="pt-2 border-t border-slate-800/60 mt-2 text-[10px] text-emerald-400 font-semibold">
+                  Klik rincian kamar →
                 </div>
               </div>
             ))}
@@ -734,7 +976,9 @@ const PoskoDetailView: React.FC<{ facilities: any[]; rooms: any[]; search: strin
 };
 
 // 4. Event Detail
-const EventDetailView: React.FC<{ eventSetups: any[]; search: string }> = ({ eventSetups, search }) => {
+const EventDetailView: React.FC<{ eventSetups: any[]; search: string; onItemClick: (item: any) => void }> = ({
+  eventSetups, search, onItemClick,
+}) => {
   const filtered = eventSetups.filter(e =>
     !search ||
     (e.eventName || e.eventTitle || '').toLowerCase().includes(search.toLowerCase()) ||
@@ -750,10 +994,16 @@ const EventDetailView: React.FC<{ eventSetups: any[]; search: string }> = ({ eve
         const totalItems = checklist.length;
         const readyItems = checklist.filter((i: any) => i.isReady).length;
         return (
-          <div key={evt.id} className="bg-slate-900/80 rounded-2xl p-4 border border-slate-800 space-y-3">
+          <div
+            key={evt.id}
+            onClick={() => onItemClick(evt)}
+            className="group bg-slate-900/80 hover:bg-slate-800/80 rounded-2xl p-4 border border-slate-800 hover:border-emerald-500/40 cursor-pointer transition-all duration-200 space-y-3"
+          >
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <div>
-                <h4 className="font-bold text-slate-100 text-sm leading-snug">{evt.eventName || evt.eventTitle}</h4>
+                <h4 className="font-bold text-slate-100 text-sm leading-snug group-hover:text-emerald-300 transition-colors">
+                  {evt.eventName || evt.eventTitle}
+                </h4>
                 <div className="flex items-center gap-3 text-xs text-slate-400 mt-0.5">
                   <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5 text-slate-500" /> {evt.eventDate}</span>
                   <span className="flex items-center gap-1"><MapPin className="w-3.5 h-3.5 text-slate-500" /> {evt.location}</span>
@@ -774,17 +1024,12 @@ const EventDetailView: React.FC<{ eventSetups: any[]; search: string }> = ({ eve
                   <span>Checklist Logistik Proker</span>
                   <span className="text-teal-400">{readyItems} / {totalItems} Siap</span>
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
-                  {checklist.map((item: any, idx: number) => (
-                    <div key={item.id || idx} className="flex items-center gap-2 text-xs">
-                      <div className={`w-2 h-2 rounded-full ${item.isReady ? 'bg-emerald-400' : 'bg-slate-600'}`} />
-                      <span className={item.isReady ? 'text-slate-200 line-through' : 'text-slate-400'}>{item.itemName || item.itemNeeded}</span>
-                      <span className="text-[10px] text-slate-500">({item.qty || item.quantity})</span>
-                    </div>
-                  ))}
-                </div>
               </div>
             )}
+
+            <div className="pt-2 border-t border-slate-800/60 flex items-center justify-between text-[10px] text-emerald-400 font-semibold">
+              <span>Klik rincian lengkap →</span>
+            </div>
           </div>
         );
       })}
@@ -793,7 +1038,9 @@ const EventDetailView: React.FC<{ eventSetups: any[]; search: string }> = ({ eve
 };
 
 // 5. Transport Detail
-const TransportDetailView: React.FC<{ transports: any[]; search: string }> = ({ transports, search }) => {
+const TransportDetailView: React.FC<{ transports: any[]; search: string; onItemClick: (item: any) => void }> = ({
+  transports, search, onItemClick,
+}) => {
   const filtered = transports.filter(t =>
     !search ||
     t.vehicleName.toLowerCase().includes(search.toLowerCase()) ||
@@ -806,10 +1053,16 @@ const TransportDetailView: React.FC<{ transports: any[]; search: string }> = ({ 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
       {filtered.map(t => (
-        <div key={t.id} className="bg-slate-900/80 rounded-2xl p-4 border border-slate-800 space-y-2">
+        <div
+          key={t.id}
+          onClick={() => onItemClick(t)}
+          className="group bg-slate-900/80 hover:bg-slate-800/80 rounded-2xl p-4 border border-slate-800 hover:border-emerald-500/40 cursor-pointer transition-all duration-200 space-y-2"
+        >
           <div className="flex items-start justify-between gap-2">
-            <h4 className="font-bold text-slate-100 text-sm leading-snug">{t.vehicleName} ({t.vehicleType || 'Mobil'})</h4>
-            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
+            <h4 className="font-bold text-slate-100 text-sm leading-snug group-hover:text-emerald-300 transition-colors">
+              {t.vehicleName} ({t.vehicleType || 'Mobil'})
+            </h4>
+            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border shrink-0 ${
               t.status === 'Berjalan' ? 'bg-violet-500/10 text-violet-400 border-violet-500/30' :
               t.status === 'Selesai' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30' :
               'bg-sky-500/10 text-sky-400 border-sky-500/30'
@@ -824,10 +1077,11 @@ const TransportDetailView: React.FC<{ transports: any[]; search: string }> = ({ 
               <MapPin className="w-3.5 h-3.5 text-slate-500 shrink-0" />
               <span>Tujuan/Tugas: {t.purpose || t.route}</span>
             </div>
-            <div className="flex items-center gap-1 text-slate-500 text-[11px]">
-              <Clock className="w-3.5 h-3.5 shrink-0" />
-              <span>Jadwal: {t.departureDate}</span>
-            </div>
+          </div>
+
+          <div className="pt-2 border-t border-slate-800/60 flex items-center justify-between text-[10px] text-emerald-400 font-semibold">
+            <span>Klik rincian lengkap →</span>
+            <span className="text-slate-500 font-normal">{t.departureDate}</span>
           </div>
         </div>
       ))}
@@ -836,12 +1090,14 @@ const TransportDetailView: React.FC<{ transports: any[]; search: string }> = ({ 
 };
 
 // 6. Maintenance Detail
-const MaintenanceDetailView: React.FC<{ maintenanceLogs: any[]; search: string }> = ({ maintenanceLogs, search }) => {
+const MaintenanceDetailView: React.FC<{ maintenanceLogs: any[]; search: string; onItemClick: (item: any) => void }> = ({
+  maintenanceLogs, search, onItemClick,
+}) => {
   const filtered = maintenanceLogs.filter(m =>
     !search ||
     m.itemName.toLowerCase().includes(search.toLowerCase()) ||
     m.reportedBy.toLowerCase().includes(search.toLowerCase()) ||
-    m.issueDescription.toLowerCase().includes(search.toLowerCase())
+    (m.damageDescription || m.issueDescription || '').toLowerCase().includes(search.toLowerCase())
   );
 
   if (filtered.length === 0) return <EmptyDetailState message="Tidak ada laporan kerusakan / pemeliharaan barang." />;
