@@ -10,6 +10,8 @@ import {
   ChevronRight,
   Users,
   ShieldCheck,
+  Backpack,
+  LayoutGrid,
 } from 'lucide-react';
 import { usePerkab } from '../context/PerkabContext';
 
@@ -21,7 +23,9 @@ export type TabType =
   | 'events'
   | 'transport'
   | 'maintenance'
-  | 'users';
+  | 'users'
+  | 'personal-logistics'
+  | 'shared-board';
 
 interface SidebarProps {
   activeTab: TabType;
@@ -99,6 +103,20 @@ export const Sidebar: React.FC<SidebarProps> = ({
       badge: isAdmin ? 'ADMIN' : undefined,
       badgeColor: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30',
       description: 'Kelola Akun & Hak Akses',
+    },
+    {
+      id: 'personal-logistics' as TabType,
+      label: 'Logistik Pribadi',
+      icon: Backpack,
+      description: 'Barang Bawaan & Kebutuhan',
+      badgeColor: 'bg-violet-500/20 text-violet-300 border-violet-500/30',
+    },
+    {
+      id: 'shared-board' as TabType,
+      label: 'Papan Bersama',
+      icon: LayoutGrid,
+      description: 'Lihat Semua Item Publik',
+      badgeColor: 'bg-sky-500/20 text-sky-300 border-sky-500/30',
     },
   ];
 

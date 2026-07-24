@@ -13,6 +13,7 @@ import {
   ToastType,
   ConfirmDialogOptions,
   ThemeMode,
+  PersonalLogisticsItem,
 } from '../types';
 import {
   INITIAL_INVENTORY,
@@ -91,6 +92,12 @@ interface PerkabContextType {
   maintenanceLogs: MaintenanceLog[];
   addMaintenanceLog: (log: Omit<MaintenanceLog, 'id' | 'dateReported'>) => void;
   updateMaintenanceStatus: (id: string, status: MaintenanceLog['status'], resolutionNotes?: string) => void;
+
+  // Personal Logistics
+  personalLogistics: PersonalLogisticsItem[];
+  addPersonalItem: (item: Omit<PersonalLogisticsItem, 'id'>) => void;
+  updatePersonalItem: (item: PersonalLogisticsItem) => void;
+  deletePersonalItem: (id: string) => void;
 
   // Config, Reset & Clear
   supabaseConfig: SupabaseConfig;
@@ -186,6 +193,7 @@ export const PerkabProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [eventSetups, setEventSetups] = useState<EventSetup[]>([]);
   const [transports, setTransports] = useState<TransportRecord[]>([]);
   const [maintenanceLogs, setMaintenanceLogs] = useState<MaintenanceLog[]>([]);
+  const [personalLogistics, setPersonalLogistics] = useState<PersonalLogisticsItem[]>([]);
   const [supabaseConfig, setSupabaseConfigState] = useState<SupabaseConfig>(getStoredSupabaseConfig());
 
   const isMounted = useRef(false);
@@ -204,6 +212,7 @@ export const PerkabProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         setEventSetups(parsed.eventSetups || []);
         setTransports(parsed.transports || []);
         setMaintenanceLogs(parsed.maintenanceLogs || []);
+        setPersonalLogistics(parsed.personalLogistics || []);
         return;
       } catch (e) {
         console.error('Failed to load local storage:', e);
@@ -235,9 +244,10 @@ export const PerkabProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       eventSetups,
       transports,
       maintenanceLogs,
+      personalLogistics,
     };
     localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(dataToSave));
-  }, [users, inventory, borrowings, facilities, rooms, eventSetups, transports, maintenanceLogs]);
+  }, [users, inventory, borrowings, facilities, rooms, eventSetups, transports, maintenanceLogs, personalLogistics]);
 
   // Sync with Supabase if active
   useEffect(() => {
@@ -275,6 +285,25 @@ export const PerkabProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             notes: d.notes,
           }));
           setInventory(formatted);
+        }
+
+        const { data: plData } = await client!.from('personal_logistics').select('*');
+        if (plData && plData.length > 0) {
+          const formatted = plData.map((d: any) => ({
+            id: d.id,
+            ownerId: d.owner_id,
+            ownerName: d.owner_name,
+            itemName: d.item_name,
+            category: d.category,
+            quantity: d.quantity,
+            unit: d.unit,
+            condition: d.condition,
+            status: d.status,
+            isPrivate: d.is_private,
+            notes: d.notes,
+            created_at: d.created_at,
+          }));
+          setPersonalLogistics(formatted);
         }
       } catch (e) {
         console.log('Supabase sync info:', e);
@@ -604,6 +633,59 @@ export const PerkabProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     showToast('Jadwal transportasi dihapus.', 'info');
   };
 
+  // Personal Logistics Handlers
+  const addPersonalItem = (item: Omit<PersonalLogisticsItem, 'id'>) => {
+    const id = `pl-${Date.now()}`;
+    const newItem: PersonalLogisticsItem = { ...item, id };
+    setPersonalLogistics(prev => [newItem, ...prev]);
+    showToast(`"${item.itemName}" berhasil ditambahkan ke logistik pribadi.`, 'success');
+
+    const client = getSupabaseClient();
+    if (client) {
+      client.from('personal_logistics').insert([{
+        id,
+        owner_id: item.ownerId,
+        owner_name: item.ownerName,
+        item_name: item.itemName,
+        category: item.category,
+        quantity: item.quantity,
+        unit: item.unit,
+        condition: item.condition,
+        status: item.status,
+        is_private: item.isPrivate,
+        notes: item.notes || null,
+      }]).then();
+    }
+  };
+
+  const updatePersonalItem = (updated: PersonalLogisticsItem) => {
+    setPersonalLogistics(prev => prev.map(p => p.id === updated.id ? updated : p));
+    showToast(`"${updated.itemName}" berhasil diperbarui.`, 'success');
+
+    const client = getSupabaseClient();
+    if (client) {
+      client.from('personal_logistics').update({
+        item_name: updated.itemName,
+        category: updated.category,
+        quantity: updated.quantity,
+        unit: updated.unit,
+        condition: updated.condition,
+        status: updated.status,
+        is_private: updated.isPrivate,
+        notes: updated.notes || null,
+      }).eq('id', updated.id).then();
+    }
+  };
+
+  const deletePersonalItem = (id: string) => {
+    setPersonalLogistics(prev => prev.filter(p => p.id !== id));
+    showToast('Item logistik pribadi dihapus.', 'info');
+    const client = getSupabaseClient();
+    if (client) {
+      client.from('personal_logistics').delete().eq('id', id).then();
+    }
+  };
+
   // Maintenance Handlers
   const addMaintenanceLog = (log: Omit<MaintenanceLog, 'id' | 'dateReported'>) => {
     const today = new Date().toISOString().split('T')[0];
@@ -758,6 +840,11 @@ export const PerkabProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         maintenanceLogs,
         addMaintenanceLog,
         updateMaintenanceStatus,
+
+        personalLogistics,
+        addPersonalItem,
+        updatePersonalItem,
+        deletePersonalItem,
 
         supabaseConfig,
         updateSupabaseConfig,

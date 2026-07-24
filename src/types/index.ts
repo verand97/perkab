@@ -158,3 +158,29 @@ export interface ConfirmDialogOptions {
 }
 
 export type ThemeMode = 'dark' | 'light';
+
+export type PersonalLogisticsCategory =
+  | 'Elektronik'
+  | 'Pakaian'
+  | 'Peralatan'
+  | 'Makanan & Minuman'
+  | 'Dokumen'
+  | 'Kebutuhan Personal'
+  | 'Lainnya';
+
+export type PersonalItemStatus = 'Terbawa' | 'Ketinggalan' | 'Hilang' | 'Dipinjamkan';
+
+export interface PersonalLogisticsItem {
+  id: string;
+  ownerId: string;
+  ownerName: string;
+  itemName: string;
+  category: PersonalLogisticsCategory;
+  quantity: number;
+  unit: string;
+  condition: ItemCondition;
+  status: PersonalItemStatus;
+  isPrivate: boolean;
+  notes?: string;
+  created_at?: string;
+}

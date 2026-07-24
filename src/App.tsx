@@ -15,6 +15,8 @@ import { ExportModal } from './components/ExportModal';
 import { SettingsModal } from './components/SettingsModal';
 import { ToastContainer } from './components/ToastContainer';
 import { ConfirmModal } from './components/ConfirmModal';
+import { PersonalLogisticsView } from './components/PersonalLogisticsView';
+import { SharedBoardView } from './components/SharedBoardView';
 
 const GlobalOverlay: React.FC = () => {
   const { toasts, removeToast, confirmOptions, closeConfirm } = usePerkab();
@@ -99,6 +101,10 @@ const AppContent: React.FC = () => {
           {activeTab === 'maintenance' && <MaintenanceView />}
 
           {activeTab === 'users' && <UserManagementView />}
+
+          {activeTab === 'personal-logistics' && <PersonalLogisticsView />}
+
+          {activeTab === 'shared-board' && <SharedBoardView />}
         </section>
       </main>
 

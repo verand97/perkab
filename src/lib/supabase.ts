@@ -185,4 +185,23 @@ CREATE POLICY "Public Read/Write Events" ON event_setups FOR ALL USING (true) WI
 CREATE POLICY "Public Read/Write Transports" ON transports FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Public Read/Write Maintenance" ON maintenance_logs FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Public Read/Write Users" ON users FOR ALL USING (true) WITH CHECK (true);
+
+-- 9. Tabel Logistik Pribadi Anggota
+CREATE TABLE IF NOT EXISTS personal_logistics (
+  id TEXT PRIMARY KEY,
+  owner_id TEXT NOT NULL,
+  owner_name TEXT NOT NULL,
+  item_name TEXT NOT NULL,
+  category TEXT DEFAULT 'Lainnya',
+  quantity INT DEFAULT 1,
+  unit TEXT DEFAULT 'buah',
+  condition TEXT DEFAULT 'Bagus',
+  status TEXT DEFAULT 'Terbawa',
+  is_private BOOLEAN DEFAULT FALSE,
+  notes TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE personal_logistics ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Public Read Write Personal Logistics" ON personal_logistics FOR ALL USING (true) WITH CHECK (true);
 `;
