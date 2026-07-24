@@ -173,7 +173,7 @@ export const SharedBoardView: React.FC = () => {
 
         {/* Search + filter */}
         <div className="flex flex-wrap gap-3">
-          <div className="flex-1 min-w-[200px] relative">
+          <div className="flex-1 min-w-50 relative">
             <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
             <input
               type="text"
@@ -222,9 +222,9 @@ export const SharedBoardView: React.FC = () => {
                 return (
                   <div key={group.id} className="glass-card rounded-2xl overflow-hidden border border-slate-800/60 hover:border-emerald-500/20 transition-all">
                     {/* Member header */}
-                    <div className="flex items-center justify-between p-4 bg-gradient-to-r from-slate-900/80 to-slate-800/40 border-b border-slate-800/60">
+                    <div className="flex items-center justify-between p-4 bg-linear-to-r from-slate-900/80 to-slate-800/40 border-b border-slate-800/60">
                       <div className="flex items-center gap-3">
-                        <div className={`w-10 h-10 rounded-full bg-gradient-to-br ${avatarGrad} flex items-center justify-center text-white font-black text-sm shadow-lg`}>
+                        <div className={`w-10 h-10 rounded-full bg-linear-to-br ${avatarGrad} flex items-center justify-center text-white font-black text-sm shadow-lg`}>
                           {group.name.charAt(0).toUpperCase()}
                         </div>
                         <div>
