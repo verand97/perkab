@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   Package,
   PackageCheck,
@@ -18,12 +18,21 @@ import {
   Shield,
   LogIn,
   Star,
+  X,
+  Search,
+  ChevronRight,
+  Clock,
+  MapPin,
+  User,
+  StickyNote,
 } from 'lucide-react';
 import { usePerkab } from '../context/PerkabContext';
 
 interface PublicLandingPageProps {
   onLoginClick: () => void;
 }
+
+type ModuleKey = 'inventory' | 'borrowings' | 'posko' | 'events' | 'transport' | 'maintenance';
 
 // ── SVG Ring Chart ──────────────────────────────────────────────────────────
 const RingChart: React.FC<{ value: number; total: number; color: string; size?: number }> = ({
@@ -60,6 +69,9 @@ export const PublicLandingPage: React.FC<PublicLandingPageProps> = ({ onLoginCli
     inventory, borrowings, facilities, rooms,
     eventSetups, transports, maintenanceLogs, users,
   } = usePerkab();
+
+  const [selectedModule, setSelectedModule] = useState<ModuleKey | null>(null);
+  const [modalSearch, setModalSearch]       = useState('');
 
   const stats = useMemo(() => ({
     inventory:   {
@@ -104,11 +116,25 @@ export const PublicLandingPage: React.FC<PublicLandingPageProps> = ({ onLoginCli
   const healthLabel   = healthPct >= 80 ? 'Sangat Baik' : healthPct >= 60 ? 'Perlu Perhatian' : 'Kritis';
   const HealthIcon    = healthPct >= 80 ? CheckCircle2 : healthPct >= 60 ? AlertCircle : XCircle;
 
-  const modules = [
+  const modules: {
+    id: ModuleKey;
+    label: string;
+    desc: string;
+    icon: React.FC<{ className?: string }>;
+    iconBg: string;
+    border: string;
+    gradient: string;
+    accentColor: string;
+    primary: { label: string; value: number };
+    secondary: { label: string; value: number; color: string }[];
+    ring: { value: number; total: number };
+    alert: { msg: string; danger: boolean } | null;
+  }[] = [
     {
-      label: 'Pendataan Logistik', desc: 'Katalog & Inventaris Barang',
+      id: 'inventory',
+      label: 'Pendataan Logistik', desc: 'Katalog & Inventaris Barang Kelompok',
       icon: PackageCheck, iconBg: 'bg-emerald-500/15 text-emerald-400',
-      border: 'border-emerald-500/20', gradient: 'from-emerald-500/10 to-transparent',
+      border: 'border-emerald-500/20 hover:border-emerald-500/50', gradient: 'from-emerald-500/10 to-transparent',
       accentColor: '#10b981',
       primary: { label: 'Total Barang', value: stats.inventory.total },
       secondary: [
@@ -119,9 +145,10 @@ export const PublicLandingPage: React.FC<PublicLandingPageProps> = ({ onLoginCli
       alert: stats.inventory.rusak > 0 ? { msg: `${stats.inventory.rusak} barang rusak`, danger: false } : null,
     },
     {
+      id: 'borrowings',
       label: 'Peminjaman Alat', desc: 'Pinjam Alat Warga/Kampus',
       icon: Handshake, iconBg: 'bg-amber-500/15 text-amber-400',
-      border: 'border-amber-500/20', gradient: 'from-amber-500/10 to-transparent',
+      border: 'border-amber-500/20 hover:border-amber-500/50', gradient: 'from-amber-500/10 to-transparent',
       accentColor: '#f59e0b',
       primary: { label: 'Total Peminjaman', value: stats.borrowings.total },
       secondary: [
@@ -133,9 +160,10 @@ export const PublicLandingPage: React.FC<PublicLandingPageProps> = ({ onLoginCli
       alert: stats.borrowings.terlambat > 0 ? { msg: `${stats.borrowings.terlambat} terlambat!`, danger: true } : null,
     },
     {
+      id: 'posko',
       label: 'Akomodasi & Posko', desc: 'Listrik, Air, Kamar & Dapur',
       icon: Home, iconBg: 'bg-sky-500/15 text-sky-400',
-      border: 'border-sky-500/20', gradient: 'from-sky-500/10 to-transparent',
+      border: 'border-sky-500/20 hover:border-sky-500/50', gradient: 'from-sky-500/10 to-transparent',
       accentColor: '#0ea5e9',
       primary: { label: 'Fasilitas Terpantau', value: stats.facilities.total },
       secondary: [
@@ -147,9 +175,10 @@ export const PublicLandingPage: React.FC<PublicLandingPageProps> = ({ onLoginCli
       alert: stats.facilities.issue > 0 ? { msg: `${stats.facilities.issue} perlu perhatian`, danger: false } : null,
     },
     {
+      id: 'events',
       label: 'Persiapan Tempat', desc: 'Logistik Proker Acara',
       icon: CalendarCheck, iconBg: 'bg-teal-500/15 text-teal-400',
-      border: 'border-teal-500/20', gradient: 'from-teal-500/10 to-transparent',
+      border: 'border-teal-500/20 hover:border-teal-500/50', gradient: 'from-teal-500/10 to-transparent',
       accentColor: '#14b8a6',
       primary: { label: 'Total Proker', value: stats.events.total },
       secondary: [
@@ -160,9 +189,10 @@ export const PublicLandingPage: React.FC<PublicLandingPageProps> = ({ onLoginCli
       alert: null,
     },
     {
+      id: 'transport',
       label: 'Pengaturan Transportasi', desc: 'Armada & Mobilisasi',
       icon: Truck, iconBg: 'bg-violet-500/15 text-violet-400',
-      border: 'border-violet-500/20', gradient: 'from-violet-500/10 to-transparent',
+      border: 'border-violet-500/20 hover:border-violet-500/50', gradient: 'from-violet-500/10 to-transparent',
       accentColor: '#8b5cf6',
       primary: { label: 'Total Armada', value: stats.transports.total },
       secondary: [
@@ -173,9 +203,10 @@ export const PublicLandingPage: React.FC<PublicLandingPageProps> = ({ onLoginCli
       alert: null,
     },
     {
+      id: 'maintenance',
       label: 'Pemeliharaan Barang', desc: 'Barang Rusak & Retur',
       icon: Wrench, iconBg: 'bg-rose-500/15 text-rose-400',
-      border: 'border-rose-500/20', gradient: 'from-rose-500/10 to-transparent',
+      border: 'border-rose-500/20 hover:border-rose-500/50', gradient: 'from-rose-500/10 to-transparent',
       accentColor: '#f43f5e',
       primary: { label: 'Total Laporan', value: stats.maintenance.total },
       secondary: [
@@ -195,6 +226,8 @@ export const PublicLandingPage: React.FC<PublicLandingPageProps> = ({ onLoginCli
     { label: 'Transportasi Aktif',     value: stats.transports.berjalan + stats.transports.jadwal, total: stats.transports.total, color: '#8b5cf6', note: stats.transports.berjalan > 0 ? `🚛 ${stats.transports.berjalan} armada berjalan` : `📅 ${stats.transports.jadwal} terjadwal` },
     { label: 'Selesai Pemeliharaan',   value: stats.maintenance.done,      total: stats.maintenance.total,   color: '#f43f5e', note: stats.maintenance.pending > 0 ? `🔧 ${stats.maintenance.pending} belum selesai` : '✓ Semua laporan teratasi' },
   ];
+
+  const activeModuleObj = modules.find(m => m.id === selectedModule);
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 font-sans">
@@ -262,8 +295,8 @@ export const PublicLandingPage: React.FC<PublicLandingPageProps> = ({ onLoginCli
                 Status Logistik &amp;<br />
                 <span className="text-emerald-400">Operasional KKN</span>
               </h1>
-              <p className="text-slate-400 mt-3 max-w-md leading-relaxed">
-                Pantau seluruh modul perlengkapan, akomodasi, dan logistik kelompok KKN secara transparan dan real-time.
+              <p className="text-slate-400 mt-3 max-w-md leading-relaxed text-sm">
+                Pantau seluruh modul perlengkapan, akomodasi, dan logistik kelompok KKN. <strong className="text-slate-200">Klik modul mana saja di bawah ini untuk melihat detail data publik.</strong>
               </p>
               <button
                 onClick={onLoginClick}
@@ -319,19 +352,25 @@ export const PublicLandingPage: React.FC<PublicLandingPageProps> = ({ onLoginCli
           </div>
         </div>
 
-        {/* ── MODULE CARDS ──────────────────────────────────────────── */}
+        {/* ── MODULE CARDS (CLICKABLE) ────────────────────────────────── */}
         <div>
-          <div className="flex items-center gap-2 mb-4">
-            <TrendingUp className="w-4 h-4 text-slate-400" />
-            <h2 className="text-sm font-bold text-slate-300">Ringkasan Per Modul</h2>
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <TrendingUp className="w-4 h-4 text-emerald-400" />
+              <h2 className="text-sm font-bold text-slate-200">Ringkasan Modul (Klik untuk Detail)</h2>
+            </div>
+            <span className="text-[11px] text-slate-400 hidden sm:inline">💡 Klik card modul mana saja untuk membuka rincian data</span>
           </div>
+
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
             {modules.map(mod => {
               const Icon = mod.icon;
               const pct  = mod.ring.total > 0 ? Math.round((mod.ring.value / mod.ring.total) * 100) : 0;
               return (
-                <div key={mod.label}
-                  className={`glass-card rounded-2xl overflow-hidden border ${mod.border} bg-linear-to-br ${mod.gradient}`}
+                <div
+                  key={mod.id}
+                  onClick={() => { setSelectedModule(mod.id); setModalSearch(''); }}
+                  className={`group glass-card rounded-2xl overflow-hidden border ${mod.border} bg-linear-to-br ${mod.gradient} hover:scale-[1.02] cursor-pointer transition-all duration-200 shadow-lg`}
                 >
                   {/* Header */}
                   <div className="p-4 pb-3">
@@ -341,7 +380,10 @@ export const PublicLandingPage: React.FC<PublicLandingPageProps> = ({ onLoginCli
                           <Icon className="w-4 h-4" />
                         </div>
                         <div>
-                          <div className="text-sm font-bold text-slate-100 leading-tight">{mod.label}</div>
+                          <div className="text-sm font-bold text-slate-100 leading-tight group-hover:text-emerald-300 transition-colors flex items-center gap-1">
+                            {mod.label}
+                            <ChevronRight className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all text-emerald-400" />
+                          </div>
                           <div className="text-[10px] text-slate-400 mt-0.5">{mod.desc}</div>
                         </div>
                       </div>
@@ -377,13 +419,18 @@ export const PublicLandingPage: React.FC<PublicLandingPageProps> = ({ onLoginCli
                     </div>
                   </div>
 
-                  {/* Progress */}
-                  <div className="px-4 pb-4 space-y-1">
+                  {/* Progress & Click CTA */}
+                  <div className="px-4 pb-4 space-y-2">
                     <div className="flex justify-between text-[10px] text-slate-500">
                       <span>{mod.primary.label}</span>
                       <span className="font-bold" style={{ color: mod.accentColor }}>{mod.primary.value} item</span>
                     </div>
                     <Bar value={mod.ring.value} total={mod.ring.total} color={mod.accentColor} />
+
+                    <div className="pt-2 border-t border-slate-800/60 flex items-center justify-between text-[11px] font-semibold text-emerald-400 group-hover:text-emerald-300">
+                      <span>Lihat detail data →</span>
+                      <span className="text-[9px] text-slate-500 bg-slate-900 px-2 py-0.5 rounded-md">Publik</span>
+                    </div>
                   </div>
                 </div>
               );
@@ -449,6 +496,416 @@ export const PublicLandingPage: React.FC<PublicLandingPageProps> = ({ onLoginCli
         </div>
       </footer>
 
+      {/* ── PUBLIC READ-ONLY MODULE DETAIL MODAL ────────────────────────── */}
+      {selectedModule && activeModuleObj && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-md"
+          onClick={e => { if (e.target === e.currentTarget) setSelectedModule(null); }}
+        >
+          <div className="glass-card w-full max-w-4xl rounded-3xl border border-slate-700/80 shadow-2xl overflow-hidden flex flex-col max-h-[85vh] animate-in fade-in slide-in-from-bottom-4 duration-300">
+            {/* Modal Header */}
+            <div className="p-5 border-b border-slate-800 flex items-center justify-between gap-4 glass-card">
+              <div className="flex items-center gap-3">
+                <div className={`p-3 rounded-2xl ${activeModuleObj.iconBg} border border-white/10`}>
+                  <activeModuleObj.icon className="w-6 h-6" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h2 className="text-lg font-bold text-white">{activeModuleObj.label}</h2>
+                    <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                      Detail Publik (Read-Only)
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-400 mt-0.5">{activeModuleObj.desc}</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setSelectedModule(null)}
+                className="p-2 rounded-xl hover:bg-slate-700 text-slate-400 hover:text-white transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Modal Search Bar */}
+            <div className="px-5 py-3 bg-slate-900/60 border-b border-slate-800 flex items-center gap-3">
+              <Search className="w-4 h-4 text-slate-400 shrink-0" />
+              <input
+                type="text"
+                placeholder={`Cari data di ${activeModuleObj.label}...`}
+                value={modalSearch}
+                onChange={e => setModalSearch(e.target.value)}
+                className="w-full bg-transparent text-xs text-slate-100 placeholder-slate-500 focus:outline-none"
+              />
+              {modalSearch && (
+                <button onClick={() => setModalSearch('')} className="text-xs text-slate-400 hover:text-white">
+                  Clear
+                </button>
+              )}
+            </div>
+
+            {/* Modal Body / Items List */}
+            <div className="p-5 overflow-y-auto flex-1 space-y-4">
+              {/* 1. Inventory */}
+              {selectedModule === 'inventory' && (
+                <InventoryDetailView inventory={inventory} search={modalSearch} />
+              )}
+
+              {/* 2. Borrowings */}
+              {selectedModule === 'borrowings' && (
+                <BorrowingDetailView borrowings={borrowings} search={modalSearch} />
+              )}
+
+              {/* 3. Posko & Facilities */}
+              {selectedModule === 'posko' && (
+                <PoskoDetailView facilities={facilities} rooms={rooms} search={modalSearch} />
+              )}
+
+              {/* 4. Events / Persiapan Tempat */}
+              {selectedModule === 'events' && (
+                <EventDetailView eventSetups={eventSetups} search={modalSearch} />
+              )}
+
+              {/* 5. Transports */}
+              {selectedModule === 'transport' && (
+                <TransportDetailView transports={transports} search={modalSearch} />
+              )}
+
+              {/* 6. Maintenance */}
+              {selectedModule === 'maintenance' && (
+                <MaintenanceDetailView maintenanceLogs={maintenanceLogs} search={modalSearch} />
+              )}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="p-4 border-t border-slate-800 glass-card flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
+              <div className="text-slate-400 text-[11px] text-center sm:text-left">
+                🔒 Ingin menambah atau memperbarui data ini? Login ke Dashboard Admin.
+              </div>
+              <button
+                onClick={() => { setSelectedModule(null); onLoginClick(); }}
+                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs transition-all shadow-lg shrink-0"
+              >
+                <LogIn className="w-3.5 h-3.5" />
+                Login ke Dashboard
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 };
+
+// ── DETAIL SUB-COMPONENTS ───────────────────────────────────────────────────
+
+// 1. Inventory Detail
+const InventoryDetailView: React.FC<{ inventory: any[]; search: string }> = ({ inventory, search }) => {
+  const filtered = inventory.filter(i =>
+    !search ||
+    i.name.toLowerCase().includes(search.toLowerCase()) ||
+    i.category.toLowerCase().includes(search.toLowerCase()) ||
+    i.code.toLowerCase().includes(search.toLowerCase()) ||
+    i.location.toLowerCase().includes(search.toLowerCase())
+  );
+
+  if (filtered.length === 0) return <EmptyDetailState message="Tidak ada data barang yang ditemukan." />;
+
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+      {filtered.map(item => (
+        <div key={item.id} className="bg-slate-900/80 rounded-2xl p-4 border border-slate-800 space-y-2">
+          <div className="flex items-start justify-between gap-2">
+            <div>
+              <span className="text-[10px] font-mono text-slate-500">{item.code}</span>
+              <h4 className="font-bold text-slate-100 text-sm leading-snug">{item.name}</h4>
+            </div>
+            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
+              item.condition === 'Bagus' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30' :
+              item.condition === 'Perlu Perbaikan' ? 'bg-amber-500/10 text-amber-400 border-amber-500/30' :
+              'bg-rose-500/10 text-rose-400 border-rose-500/30'
+            }`}>
+              {item.condition}
+            </span>
+          </div>
+
+          <div className="grid grid-cols-2 gap-2 text-xs pt-1">
+            <div className="bg-slate-950/60 rounded-xl p-2">
+              <div className="text-[10px] text-slate-500">Kategori</div>
+              <div className="font-semibold text-slate-300">{item.category}</div>
+            </div>
+            <div className="bg-slate-950/60 rounded-xl p-2">
+              <div className="text-[10px] text-slate-500">Tersedia</div>
+              <div className="font-bold text-emerald-400">{item.availableQty} <span className="text-slate-500 font-normal">/ {item.quantity} {item.unit}</span></div>
+            </div>
+            <div className="bg-slate-950/60 rounded-xl p-2">
+              <div className="text-[10px] text-slate-500">Kepemilikan</div>
+              <div className="font-semibold text-slate-300">{item.ownership}</div>
+            </div>
+            <div className="bg-slate-950/60 rounded-xl p-2">
+              <div className="text-[10px] text-slate-500">Lokasi Simpan</div>
+              <div className="font-semibold text-slate-300 truncate">{item.location}</div>
+            </div>
+          </div>
+          {item.notes && <div className="text-[11px] text-slate-400 italic">" {item.notes} "</div>}
+        </div>
+      ))}
+    </div>
+  );
+};
+
+// 2. Borrowing Detail
+const BorrowingDetailView: React.FC<{ borrowings: any[]; search: string }> = ({ borrowings, search }) => {
+  const filtered = borrowings.filter(b =>
+    !search ||
+    b.itemName.toLowerCase().includes(search.toLowerCase()) ||
+    b.borrowerName.toLowerCase().includes(search.toLowerCase())
+  );
+
+  if (filtered.length === 0) return <EmptyDetailState message="Tidak ada catatan peminjaman alat." />;
+
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+      {filtered.map(b => (
+        <div key={b.id} className="bg-slate-900/80 rounded-2xl p-4 border border-slate-800 space-y-2">
+          <div className="flex items-start justify-between gap-2">
+            <h4 className="font-bold text-slate-100 text-sm leading-snug">{b.itemName}</h4>
+            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
+              b.status === 'Dikembalikan' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30' :
+              b.status === 'Terlambat' ? 'bg-rose-500/10 text-rose-400 border-rose-500/30' :
+              'bg-amber-500/10 text-amber-400 border-amber-500/30'
+            }`}>
+              {b.status}
+            </span>
+          </div>
+
+          <div className="text-xs space-y-1 pt-1">
+            <div className="flex items-center gap-1.5 text-slate-300">
+              <User className="w-3.5 h-3.5 text-slate-500 shrink-0" />
+              <span>Peminjam: <strong className="text-white">{b.borrowerName}</strong> ({b.borrowerContact})</span>
+            </div>
+            <div className="flex items-center gap-1.5 text-slate-400 text-[11px]">
+              <Clock className="w-3.5 h-3.5 text-slate-500 shrink-0" />
+              <span>Pinjam: {b.borrowDate} — Kembali: {b.expectedReturnDate}</span>
+            </div>
+            {b.conditionOnReturn && (
+              <div className="text-[11px] text-slate-400">
+                Kondisi Pengembalian: <strong className="text-emerald-400">{b.conditionOnReturn}</strong>
+              </div>
+            )}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+};
+
+// 3. Posko Detail
+const PoskoDetailView: React.FC<{ facilities: any[]; rooms: any[]; search: string }> = ({ facilities, rooms, search }) => {
+  const filteredFac = facilities.filter(f =>
+    !search ||
+    f.facilityName.toLowerCase().includes(search.toLowerCase()) ||
+    f.facilityType.toLowerCase().includes(search.toLowerCase()) ||
+    f.picName.toLowerCase().includes(search.toLowerCase())
+  );
+
+  return (
+    <div className="space-y-4">
+      <div>
+        <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">Fasilitas Posko</h4>
+        {filteredFac.length === 0 ? (
+          <EmptyDetailState message="Tidak ada fasilitas terpantau." />
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {filteredFac.map(f => (
+              <div key={f.id} className="bg-slate-900/80 rounded-2xl p-4 border border-slate-800 space-y-2">
+                <div className="flex items-start justify-between gap-2">
+                  <div>
+                    <span className="text-[10px] text-sky-400 font-bold uppercase">{f.facilityType}</span>
+                    <h5 className="font-bold text-slate-100 text-sm leading-snug">{f.facilityName}</h5>
+                  </div>
+                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
+                    f.status === 'Sangat Baik' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30' :
+                    'bg-amber-500/10 text-amber-400 border-amber-500/30'
+                  }`}>
+                    {f.status}
+                  </span>
+                </div>
+                <div className="text-xs text-slate-400 space-y-0.5 pt-1">
+                  <div>PIC: <strong className="text-slate-200">{f.picName}</strong></div>
+                  <div>Rincian: {f.details}</div>
+                  <div className="text-[10px] text-slate-500">Terakhir dicek: {f.lastChecked}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {rooms.length > 0 && (
+        <div>
+          <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">Tata Letak Kamar Posko</h4>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            {rooms.map(r => (
+              <div key={r.id} className="bg-slate-900/60 rounded-2xl p-3.5 border border-slate-800">
+                <h5 className="font-bold text-slate-100 text-xs">{r.roomName}</h5>
+                <div className="text-[11px] text-slate-400 mt-1">Kapasitas: <strong className="text-sky-400">{r.capacity} orang</strong></div>
+                <div className="text-[10px] text-slate-500 mt-0.5">{r.currentOccupants}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// 4. Event Detail
+const EventDetailView: React.FC<{ eventSetups: any[]; search: string }> = ({ eventSetups, search }) => {
+  const filtered = eventSetups.filter(e =>
+    !search ||
+    e.eventTitle.toLowerCase().includes(search.toLowerCase()) ||
+    e.location.toLowerCase().includes(search.toLowerCase())
+  );
+
+  if (filtered.length === 0) return <EmptyDetailState message="Tidak ada proker acara yang terdaftar." />;
+
+  return (
+    <div className="space-y-3">
+      {filtered.map(evt => {
+        const totalItems = evt.itemsChecklist?.length || 0;
+        const readyItems = evt.itemsChecklist?.filter((i: any) => i.isReady).length || 0;
+        return (
+          <div key={evt.id} className="bg-slate-900/80 rounded-2xl p-4 border border-slate-800 space-y-3">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <div>
+                <h4 className="font-bold text-slate-100 text-sm leading-snug">{evt.eventTitle}</h4>
+                <div className="flex items-center gap-3 text-xs text-slate-400 mt-0.5">
+                  <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5 text-slate-500" /> {evt.eventDate}</span>
+                  <span className="flex items-center gap-1"><MapPin className="w-3.5 h-3.5 text-slate-500" /> {evt.location}</span>
+                </div>
+              </div>
+              <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full border shrink-0 w-fit ${
+                evt.setupStatus === 'Selesai' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30' :
+                evt.setupStatus === 'Bahan Siap' ? 'bg-sky-500/10 text-sky-400 border-sky-500/30' :
+                'bg-amber-500/10 text-amber-400 border-amber-500/30'
+              }`}>
+                {evt.setupStatus}
+              </span>
+            </div>
+
+            {totalItems > 0 && (
+              <div className="bg-slate-950/60 rounded-xl p-3 space-y-2">
+                <div className="flex justify-between text-[11px] font-semibold text-slate-300">
+                  <span>Checklist Logistik Proker</span>
+                  <span className="text-teal-400">{readyItems} / {totalItems} Siap</span>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+                  {evt.itemsChecklist.map((item: any) => (
+                    <div key={item.id} className="flex items-center gap-2 text-xs">
+                      <div className={`w-2 h-2 rounded-full ${item.isReady ? 'bg-emerald-400' : 'bg-slate-600'}`} />
+                      <span className={item.isReady ? 'text-slate-200 line-through' : 'text-slate-400'}>{item.itemNeeded}</span>
+                      <span className="text-[10px] text-slate-500">({item.quantity})</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+};
+
+// 5. Transport Detail
+const TransportDetailView: React.FC<{ transports: any[]; search: string }> = ({ transports, search }) => {
+  const filtered = transports.filter(t =>
+    !search ||
+    t.vehicleName.toLowerCase().includes(search.toLowerCase()) ||
+    t.driverName.toLowerCase().includes(search.toLowerCase()) ||
+    t.route.toLowerCase().includes(search.toLowerCase())
+  );
+
+  if (filtered.length === 0) return <EmptyDetailState message="Tidak ada armada transportasi yang terdaftar." />;
+
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+      {filtered.map(t => (
+        <div key={t.id} className="bg-slate-900/80 rounded-2xl p-4 border border-slate-800 space-y-2">
+          <div className="flex items-start justify-between gap-2">
+            <h4 className="font-bold text-slate-100 text-sm leading-snug">{t.vehicleName}</h4>
+            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
+              t.status === 'Berjalan' ? 'bg-violet-500/10 text-violet-400 border-violet-500/30' :
+              t.status === 'Selesai' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30' :
+              'bg-sky-500/10 text-sky-400 border-sky-500/30'
+            }`}>
+              {t.status}
+            </span>
+          </div>
+
+          <div className="text-xs text-slate-300 space-y-1 pt-1">
+            <div>Pengemudi / PJ: <strong className="text-white">{t.driverName}</strong></div>
+            <div className="flex items-center gap-1 text-slate-400">
+              <MapPin className="w-3.5 h-3.5 text-slate-500 shrink-0" />
+              <span>Rute: {t.route}</span>
+            </div>
+            <div className="flex items-center gap-1 text-slate-500 text-[11px]">
+              <Clock className="w-3.5 h-3.5 shrink-0" />
+              <span>Jadwal: {t.departureDate} ({t.departureTime})</span>
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+};
+
+// 6. Maintenance Detail
+const MaintenanceDetailView: React.FC<{ maintenanceLogs: any[]; search: string }> = ({ maintenanceLogs, search }) => {
+  const filtered = maintenanceLogs.filter(m =>
+    !search ||
+    m.itemName.toLowerCase().includes(search.toLowerCase()) ||
+    m.reportedBy.toLowerCase().includes(search.toLowerCase()) ||
+    m.issueDescription.toLowerCase().includes(search.toLowerCase())
+  );
+
+  if (filtered.length === 0) return <EmptyDetailState message="Tidak ada laporan kerusakan / pemeliharaan barang." />;
+
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+      {filtered.map(m => (
+        <div key={m.id} className="bg-slate-900/80 rounded-2xl p-4 border border-slate-800 space-y-2">
+          <div className="flex items-start justify-between gap-2">
+            <h4 className="font-bold text-slate-100 text-sm leading-snug">{m.itemName}</h4>
+            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
+              m.status === 'Selesai Perbaikan' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30' :
+              m.status === 'Sedang Diperbaiki' ? 'bg-sky-500/10 text-sky-400 border-sky-500/30' :
+              'bg-rose-500/10 text-rose-400 border-rose-500/30'
+            }`}>
+              {m.status}
+            </span>
+          </div>
+
+          <div className="text-xs text-slate-300 space-y-1 pt-1">
+            <div className="text-slate-400">Masalah: {m.issueDescription}</div>
+            <div className="text-[11px] text-slate-500">Dilaporkan oleh: {m.reportedBy} ({m.dateReported})</div>
+            {m.resolutionNotes && (
+              <div className="text-[11px] text-emerald-400 italic bg-emerald-950/30 p-2 rounded-lg border border-emerald-500/20 mt-1">
+                Solusi: {m.resolutionNotes}
+              </div>
+            )}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+};
+
+const EmptyDetailState: React.FC<{ message: string }> = ({ message }) => (
+  <div className="p-8 text-center glass-card rounded-2xl border border-slate-800">
+    <Package className="w-10 h-10 text-slate-600 mx-auto mb-2" />
+    <div className="text-xs text-slate-400 font-medium">{message}</div>
+  </div>
+);

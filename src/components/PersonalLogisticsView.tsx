@@ -60,7 +60,7 @@ const DEFAULT_FORM = {
   unit: 'buah',
   condition: 'Bagus' as ItemCondition,
   status: 'Terbawa' as PersonalItemStatus,
-  isPrivate: false,
+  isPrivate: true,
   notes: '',
 };
 
@@ -157,7 +157,8 @@ export const PersonalLogisticsView: React.FC = () => {
           </h1>
           <p className="text-sm text-slate-400 mt-1">
             Barang bawaan &amp; kebutuhan personal{' '}
-            <span className="text-emerald-400 font-semibold">{currentUser.name}</span>
+            <span className="text-emerald-400 font-semibold">{currentUser.name}</span>{' '}
+            <span className="text-slate-500 text-xs font-normal">(Terisolasi &amp; tidak pernah muncul di Landing Page Publik)</span>
           </p>
         </div>
         <button
@@ -373,10 +374,12 @@ export const PersonalLogisticsView: React.FC = () => {
                   {form.isPrivate ? <Lock className="w-4 h-4 text-violet-400" /> : <Globe className="w-4 h-4 text-emerald-400" />}
                   <div>
                     <div className={`text-xs font-bold ${form.isPrivate ? 'text-violet-300' : 'text-emerald-300'}`}>
-                      {form.isPrivate ? 'Mode Privat' : 'Mode Publik'}
+                      {form.isPrivate ? 'Mode Privat (Rasia/Pribadi)' : 'Mode Berbagi (Sesama Anggota)'}
                     </div>
                     <div className="text-[10px] text-slate-500">
-                      {form.isPrivate ? 'Hanya kamu yang bisa melihat' : 'Terlihat di Papan Bersama'}
+                      {form.isPrivate
+                        ? 'Hanya kamu yang dapat melihat item ini di dashboard'
+                        : 'Terlihat oleh anggota lain di Papan Bersama (TIDAK muncul di Landing Page Publik)'}
                     </div>
                   </div>
                 </div>
