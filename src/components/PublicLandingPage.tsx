@@ -676,7 +676,7 @@ const PoskoDetailView: React.FC<{ facilities: any[]; rooms: any[]; search: strin
   const filteredFac = facilities.filter(f =>
     !search ||
     f.facilityName.toLowerCase().includes(search.toLowerCase()) ||
-    f.facilityType.toLowerCase().includes(search.toLowerCase()) ||
+    (f.category || f.facilityType || '').toLowerCase().includes(search.toLowerCase()) ||
     f.picName.toLowerCase().includes(search.toLowerCase())
   );
 
@@ -692,7 +692,7 @@ const PoskoDetailView: React.FC<{ facilities: any[]; rooms: any[]; search: strin
               <div key={f.id} className="bg-slate-900/80 rounded-2xl p-4 border border-slate-800 space-y-2">
                 <div className="flex items-start justify-between gap-2">
                   <div>
-                    <span className="text-[10px] text-sky-400 font-bold uppercase">{f.facilityType}</span>
+                    <span className="text-[10px] text-sky-400 font-bold uppercase">{f.category || f.facilityType || 'Fasilitas'}</span>
                     <h5 className="font-bold text-slate-100 text-sm leading-snug">{f.facilityName}</h5>
                   </div>
                   <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
@@ -721,7 +721,9 @@ const PoskoDetailView: React.FC<{ facilities: any[]; rooms: any[]; search: strin
               <div key={r.id} className="bg-slate-900/60 rounded-2xl p-3.5 border border-slate-800">
                 <h5 className="font-bold text-slate-100 text-xs">{r.roomName}</h5>
                 <div className="text-[11px] text-slate-400 mt-1">Kapasitas: <strong className="text-sky-400">{r.capacity} orang</strong></div>
-                <div className="text-[10px] text-slate-500 mt-0.5">{r.currentOccupants}</div>
+                <div className="text-[10px] text-slate-500 mt-0.5">
+                  {Array.isArray(r.occupants) && r.occupants.length > 0 ? r.occupants.join(', ') : (r.currentOccupants || 'Penghuni Belum Diisi')}
+                </div>
               </div>
             ))}
           </div>
@@ -735,7 +737,7 @@ const PoskoDetailView: React.FC<{ facilities: any[]; rooms: any[]; search: strin
 const EventDetailView: React.FC<{ eventSetups: any[]; search: string }> = ({ eventSetups, search }) => {
   const filtered = eventSetups.filter(e =>
     !search ||
-    e.eventTitle.toLowerCase().includes(search.toLowerCase()) ||
+    (e.eventName || e.eventTitle || '').toLowerCase().includes(search.toLowerCase()) ||
     e.location.toLowerCase().includes(search.toLowerCase())
   );
 
@@ -744,13 +746,14 @@ const EventDetailView: React.FC<{ eventSetups: any[]; search: string }> = ({ eve
   return (
     <div className="space-y-3">
       {filtered.map(evt => {
-        const totalItems = evt.itemsChecklist?.length || 0;
-        const readyItems = evt.itemsChecklist?.filter((i: any) => i.isReady).length || 0;
+        const checklist = evt.requiredItems || evt.itemsChecklist || [];
+        const totalItems = checklist.length;
+        const readyItems = checklist.filter((i: any) => i.isReady).length;
         return (
           <div key={evt.id} className="bg-slate-900/80 rounded-2xl p-4 border border-slate-800 space-y-3">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <div>
-                <h4 className="font-bold text-slate-100 text-sm leading-snug">{evt.eventTitle}</h4>
+                <h4 className="font-bold text-slate-100 text-sm leading-snug">{evt.eventName || evt.eventTitle}</h4>
                 <div className="flex items-center gap-3 text-xs text-slate-400 mt-0.5">
                   <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5 text-slate-500" /> {evt.eventDate}</span>
                   <span className="flex items-center gap-1"><MapPin className="w-3.5 h-3.5 text-slate-500" /> {evt.location}</span>
@@ -758,7 +761,7 @@ const EventDetailView: React.FC<{ eventSetups: any[]; search: string }> = ({ eve
               </div>
               <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full border shrink-0 w-fit ${
                 evt.setupStatus === 'Selesai' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30' :
-                evt.setupStatus === 'Bahan Siap' ? 'bg-sky-500/10 text-sky-400 border-sky-500/30' :
+                evt.setupStatus === 'Bahan Siap' || evt.setupStatus === 'Terpasang' ? 'bg-sky-500/10 text-sky-400 border-sky-500/30' :
                 'bg-amber-500/10 text-amber-400 border-amber-500/30'
               }`}>
                 {evt.setupStatus}
@@ -772,11 +775,11 @@ const EventDetailView: React.FC<{ eventSetups: any[]; search: string }> = ({ eve
                   <span className="text-teal-400">{readyItems} / {totalItems} Siap</span>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
-                  {evt.itemsChecklist.map((item: any) => (
-                    <div key={item.id} className="flex items-center gap-2 text-xs">
+                  {checklist.map((item: any, idx: number) => (
+                    <div key={item.id || idx} className="flex items-center gap-2 text-xs">
                       <div className={`w-2 h-2 rounded-full ${item.isReady ? 'bg-emerald-400' : 'bg-slate-600'}`} />
-                      <span className={item.isReady ? 'text-slate-200 line-through' : 'text-slate-400'}>{item.itemNeeded}</span>
-                      <span className="text-[10px] text-slate-500">({item.quantity})</span>
+                      <span className={item.isReady ? 'text-slate-200 line-through' : 'text-slate-400'}>{item.itemName || item.itemNeeded}</span>
+                      <span className="text-[10px] text-slate-500">({item.qty || item.quantity})</span>
                     </div>
                   ))}
                 </div>
@@ -795,7 +798,7 @@ const TransportDetailView: React.FC<{ transports: any[]; search: string }> = ({ 
     !search ||
     t.vehicleName.toLowerCase().includes(search.toLowerCase()) ||
     t.driverName.toLowerCase().includes(search.toLowerCase()) ||
-    t.route.toLowerCase().includes(search.toLowerCase())
+    (t.purpose || t.route || '').toLowerCase().includes(search.toLowerCase())
   );
 
   if (filtered.length === 0) return <EmptyDetailState message="Tidak ada armada transportasi yang terdaftar." />;
@@ -805,7 +808,7 @@ const TransportDetailView: React.FC<{ transports: any[]; search: string }> = ({ 
       {filtered.map(t => (
         <div key={t.id} className="bg-slate-900/80 rounded-2xl p-4 border border-slate-800 space-y-2">
           <div className="flex items-start justify-between gap-2">
-            <h4 className="font-bold text-slate-100 text-sm leading-snug">{t.vehicleName}</h4>
+            <h4 className="font-bold text-slate-100 text-sm leading-snug">{t.vehicleName} ({t.vehicleType || 'Mobil'})</h4>
             <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
               t.status === 'Berjalan' ? 'bg-violet-500/10 text-violet-400 border-violet-500/30' :
               t.status === 'Selesai' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30' :
@@ -819,11 +822,11 @@ const TransportDetailView: React.FC<{ transports: any[]; search: string }> = ({ 
             <div>Pengemudi / PJ: <strong className="text-white">{t.driverName}</strong></div>
             <div className="flex items-center gap-1 text-slate-400">
               <MapPin className="w-3.5 h-3.5 text-slate-500 shrink-0" />
-              <span>Rute: {t.route}</span>
+              <span>Tujuan/Tugas: {t.purpose || t.route}</span>
             </div>
             <div className="flex items-center gap-1 text-slate-500 text-[11px]">
               <Clock className="w-3.5 h-3.5 shrink-0" />
-              <span>Jadwal: {t.departureDate} ({t.departureTime})</span>
+              <span>Jadwal: {t.departureDate}</span>
             </div>
           </div>
         </div>

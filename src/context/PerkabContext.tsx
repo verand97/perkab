@@ -204,14 +204,14 @@ export const PerkabProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
-        setUsers(parsed.users || INITIAL_USERS);
-        setInventory(parsed.inventory || []);
-        setBorrowings(parsed.borrowings || []);
-        setFacilities(parsed.facilities || []);
-        setRooms(parsed.rooms || []);
-        setEventSetups(parsed.eventSetups || []);
-        setTransports(parsed.transports || []);
-        setMaintenanceLogs(parsed.maintenanceLogs || []);
+        setUsers(parsed.users?.length ? parsed.users : INITIAL_USERS);
+        setInventory(parsed.inventory?.length ? parsed.inventory : INITIAL_INVENTORY);
+        setBorrowings(parsed.borrowings?.length ? parsed.borrowings : INITIAL_BORROWINGS);
+        setFacilities(parsed.facilities?.length ? parsed.facilities : INITIAL_POSKO_FACILITIES);
+        setRooms(parsed.rooms?.length ? parsed.rooms : INITIAL_ROOM_LAYOUTS);
+        setEventSetups(parsed.eventSetups?.length ? parsed.eventSetups : INITIAL_EVENT_SETUPS);
+        setTransports(parsed.transports?.length ? parsed.transports : INITIAL_TRANSPORTS);
+        setMaintenanceLogs(parsed.maintenanceLogs?.length ? parsed.maintenanceLogs : INITIAL_MAINTENANCE_LOGS);
         setPersonalLogistics(parsed.personalLogistics || []);
         return;
       } catch (e) {
@@ -249,61 +249,105 @@ export const PerkabProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(dataToSave));
   }, [users, inventory, borrowings, facilities, rooms, eventSetups, transports, maintenanceLogs, personalLogistics]);
 
-  // Sync with Supabase if active
+  // Sync with Supabase if active (All Modules for Public & Admin View)
   useEffect(() => {
     const client = getSupabaseClient();
     if (!client) return;
 
     async function syncRemote() {
       try {
+        // 1. Users
         const { data: userData } = await client!.from('users').select('*');
         if (userData && userData.length > 0) {
-          const formattedUsers = userData.map((u: any) => ({
-            id: u.id,
-            name: u.name,
-            nim: u.nim,
-            role: u.role,
-            position: u.position,
-          }));
-          setUsers(formattedUsers);
+          setUsers(userData.map((u: any) => ({
+            id: u.id, name: u.name, nim: u.nim, role: u.role, position: u.position,
+          })));
         }
 
+        // 2. Inventory
         const { data: invData } = await client!.from('inventory').select('*');
         if (invData && invData.length > 0) {
-          const formatted = invData.map((d: any) => ({
-            id: d.id,
-            code: d.code,
-            name: d.name,
-            category: d.category,
-            quantity: d.quantity,
-            availableQty: d.available_qty,
-            unit: d.unit,
-            condition: d.condition,
-            ownership: d.ownership,
-            lenderName: d.lender_name,
-            location: d.location,
-            notes: d.notes,
-          }));
-          setInventory(formatted);
+          setInventory(invData.map((d: any) => ({
+            id: d.id, code: d.code, name: d.name, category: d.category,
+            quantity: d.quantity, availableQty: d.available_qty, unit: d.unit,
+            condition: d.condition, ownership: d.ownership, lenderName: d.lender_name,
+            location: d.location, notes: d.notes,
+          })));
         }
 
+        // 3. Borrowings
+        const { data: borData } = await client!.from('borrowings').select('*');
+        if (borData && borData.length > 0) {
+          setBorrowings(borData.map((b: any) => ({
+            id: b.id, itemName: b.item_name, inventoryId: b.inventory_id,
+            lenderName: b.lender_name, lenderPhone: b.lender_phone,
+            borrowerName: b.borrower_name, borrowDate: b.borrow_date,
+            dueDate: b.due_date, returnDate: b.return_date, quantity: b.quantity,
+            depositCost: b.deposit_cost, status: b.status, conditionOnReturn: b.condition_on_return,
+            notes: b.notes,
+          })));
+        }
+
+        // 4. Facilities
+        const { data: facData } = await client!.from('posko_facilities').select('*');
+        if (facData && facData.length > 0) {
+          setFacilities(facData.map((f: any) => ({
+            id: f.id, facilityName: f.facility_name, category: f.category || 'Listrik',
+            status: f.status, lastChecked: f.last_checked, picName: f.pic_name, details: f.details,
+          })));
+        }
+
+        // 5. Rooms
+        const { data: roomData } = await client!.from('posko_rooms').select('*');
+        if (roomData && roomData.length > 0) {
+          setRooms(roomData.map((r: any) => ({
+            id: r.id, roomName: r.room_name, capacity: r.capacity,
+            occupants: r.occupants || [], assignedEquipment: r.assigned_equipment || [], notes: r.notes,
+          })));
+        }
+
+        // 6. Events
+        const { data: evtData } = await client!.from('event_setups').select('*');
+        if (evtData && evtData.length > 0) {
+          setEventSetups(evtData.map((e: any) => ({
+            id: e.id, eventName: e.event_name || e.event_title, eventDate: e.event_date,
+            location: e.location, picName: e.pic_name || 'PJ Event', setupStatus: e.setup_status,
+            requiredItems: e.required_items || e.items_checklist || [], notes: e.notes,
+          })));
+        }
+
+        // 7. Transports
+        const { data: trpData } = await client!.from('transports').select('*');
+        if (trpData && trpData.length > 0) {
+          setTransports(trpData.map((t: any) => ({
+            id: t.id, vehicleName: t.vehicle_name, vehicleType: t.vehicle_type || 'Mobil',
+            driverName: t.driver_name, purpose: t.purpose || t.route || 'Mobilisasi',
+            departureDate: t.departure_date, returnDate: t.return_date || t.departure_date,
+            cargoDetails: t.cargo_details || 'Barang Logistik', cost: t.cost || 0,
+            status: t.status,
+          })));
+        }
+
+        // 8. Maintenance Logs
+        const { data: mtnData } = await client!.from('maintenance_logs').select('*');
+        if (mtnData && mtnData.length > 0) {
+          setMaintenanceLogs(mtnData.map((m: any) => ({
+            id: m.id, itemName: m.item_name, reportedBy: m.reported_by,
+            damageDescription: m.damage_description || m.issue_description || '',
+            estimatedCost: m.estimated_cost || 0, status: m.status,
+            resolutionNotes: m.resolution_notes, dateReported: m.date_reported || new Date().toISOString().split('T')[0],
+          })));
+        }
+
+        // 9. Personal Logistics
         const { data: plData } = await client!.from('personal_logistics').select('*');
         if (plData && plData.length > 0) {
-          const formatted = plData.map((d: any) => ({
-            id: d.id,
-            ownerId: d.owner_id,
-            ownerName: d.owner_name,
-            itemName: d.item_name,
-            category: d.category,
-            quantity: d.quantity,
-            unit: d.unit,
-            condition: d.condition,
-            status: d.status,
-            isPrivate: d.is_private,
-            notes: d.notes,
-            created_at: d.created_at,
-          }));
-          setPersonalLogistics(formatted);
+          setPersonalLogistics(plData.map((d: any) => ({
+            id: d.id, ownerId: d.owner_id, ownerName: d.owner_name,
+            itemName: d.item_name, category: d.category, quantity: d.quantity,
+            unit: d.unit, condition: d.condition, status: d.status,
+            isPrivate: d.is_private, notes: d.notes, created_at: d.created_at,
+          })));
         }
       } catch (e) {
         console.log('Supabase sync info:', e);
