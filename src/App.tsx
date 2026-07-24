@@ -17,6 +17,7 @@ import { ToastContainer } from './components/ToastContainer';
 import { ConfirmModal } from './components/ConfirmModal';
 import { PersonalLogisticsView } from './components/PersonalLogisticsView';
 import { SharedBoardView } from './components/SharedBoardView';
+import { PublicLandingPage } from './components/PublicLandingPage';
 
 const GlobalOverlay: React.FC = () => {
   const { toasts, removeToast, confirmOptions, closeConfirm } = usePerkab();
@@ -29,9 +30,10 @@ const GlobalOverlay: React.FC = () => {
 };
 
 const AppContent: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<TabType>('dashboard');
+  const [activeTab, setActiveTab]       = useState<TabType>('dashboard');
   const [isExportOpen, setIsExportOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [showLoginModal, setShowLoginModal] = useState(false);
 
   const {
     currentUser,
@@ -41,11 +43,14 @@ const AppContent: React.FC = () => {
     maintenanceLogs,
   } = usePerkab();
 
-  // If not logged in, render sleek Login Screen with global toast/confirm overlays
+  // Pre-login: show public landing page + login modal
   if (!currentUser) {
     return (
       <>
-        <LoginScreen />
+        <PublicLandingPage onLoginClick={() => setShowLoginModal(true)} />
+        {showLoginModal && (
+          <LoginScreen asModal onClose={() => setShowLoginModal(false)} />
+        )}
         <GlobalOverlay />
       </>
     );
