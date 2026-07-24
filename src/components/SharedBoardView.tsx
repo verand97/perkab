@@ -1,368 +1,461 @@
-import React, { useState, useMemo } from 'react';
+import React, { useMemo } from 'react';
 import {
   LayoutGrid,
-  Users,
-  Package,
+  PackageCheck,
+  Handshake,
+  Home,
+  CalendarCheck,
+  Truck,
+  Wrench,
   CheckCircle2,
   AlertCircle,
   XCircle,
-  ArrowRightLeft,
-  Search,
-  ChevronDown,
-  ChevronUp,
-  Globe,
-  Backpack,
-  PackageCheck,
-  StickyNote,
-  Lock,
+  Clock,
+  TrendingUp,
+  Users,
+  Activity,
+  ArrowRight,
+  Zap,
+  Shield,
+  Star,
 } from 'lucide-react';
 import { usePerkab } from '../context/PerkabContext';
-import { PersonalItemStatus } from '../types';
+import { TabType } from './Sidebar';
 
-const STATUS_CONFIG: Record<PersonalItemStatus, { icon: React.FC<{ className?: string }>; color: string; bg: string }> = {
-  Terbawa:     { icon: CheckCircle2,   color: 'text-emerald-400', bg: 'bg-emerald-500/15 border-emerald-500/30' },
-  Ketinggalan: { icon: AlertCircle,    color: 'text-amber-400',   bg: 'bg-amber-500/15 border-amber-500/30' },
-  Hilang:      { icon: XCircle,        color: 'text-rose-400',    bg: 'bg-rose-500/15 border-rose-500/30' },
-  Dipinjamkan: { icon: ArrowRightLeft, color: 'text-sky-400',     bg: 'bg-sky-500/15 border-sky-500/30' },
-};
+interface SharedBoardViewProps {
+  onNavigate?: (tab: TabType) => void;
+}
 
-const MEMBER_AVATAR_COLORS = [
-  'from-emerald-500 to-teal-600',
-  'from-violet-500 to-purple-600',
-  'from-sky-500 to-blue-600',
-  'from-rose-500 to-pink-600',
-  'from-amber-500 to-orange-600',
-  'from-lime-500 to-green-600',
-  'from-fuchsia-500 to-pink-600',
-  'from-cyan-500 to-sky-600',
-];
-
-const CATEGORY_DOT: Record<string, string> = {
-  'Elektronik':         'bg-violet-400',
-  'Pakaian':            'bg-pink-400',
-  'Peralatan':          'bg-orange-400',
-  'Makanan & Minuman':  'bg-lime-400',
-  'Dokumen':            'bg-sky-400',
-  'Kebutuhan Personal': 'bg-teal-400',
-  'Lainnya':            'bg-slate-400',
-};
-
-export const SharedBoardView: React.FC = () => {
-  const { personalLogistics, inventory, users } = usePerkab();
-  const [searchQuery, setSearchQuery]     = useState('');
-  const [filterMember, setFilterMember]   = useState('ALL');
-  const [expandedCards, setExpandedCards] = useState<Record<string, boolean>>({});
-  const [activeTab, setActiveTab]         = useState<'personal' | 'inventory'>('personal');
-
-  // Only public personal logistics
-  const publicItems = personalLogistics.filter(p => !p.isPrivate);
-
-  // Group public items by owner
-  const groupedByMember = useMemo(() => {
-    const map: Record<string, { name: string; id: string; items: typeof publicItems }> = {};
-    publicItems.forEach(item => {
-      if (!map[item.ownerId]) {
-        map[item.ownerId] = { name: item.ownerName, id: item.ownerId, items: [] };
-      }
-      map[item.ownerId].items.push(item);
-    });
-    return Object.values(map);
-  }, [publicItems]);
-
-  const filteredGroups = groupedByMember
-    .filter(g => filterMember === 'ALL' || g.id === filterMember)
-    .map(g => ({
-      ...g,
-      items: g.items.filter(item =>
-        searchQuery === '' ||
-        item.itemName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        item.category.toLowerCase().includes(searchQuery.toLowerCase())
-      ),
-    }))
-    .filter(g => g.items.length > 0);
-
-  const filteredInventory = inventory.filter(item =>
-    searchQuery === '' ||
-    item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    item.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    item.location.toLowerCase().includes(searchQuery.toLowerCase())
+// Mini ring chart (SVG)
+const RingChart: React.FC<{ value: number; total: number; color: string; size?: number }> = ({
+  value, total, color, size = 52,
+}) => {
+  const pct   = total > 0 ? value / total : 0;
+  const r     = (size - 8) / 2;
+  const circ  = 2 * Math.PI * r;
+  const dash  = pct * circ;
+  const cx    = size / 2;
+  return (
+    <svg width={size} height={size} className="-rotate-90">
+      <circle cx={cx} cy={cx} r={r} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth={6} />
+      <circle cx={cx} cy={cx} r={r} fill="none" stroke={color} strokeWidth={6}
+        strokeDasharray={`${dash} ${circ - dash}`} strokeLinecap="round"
+        style={{ transition: 'stroke-dasharray 0.8s ease' }} />
+    </svg>
   );
+};
 
-  const toggleCard = (id: string) => setExpandedCards(prev => ({ ...prev, [id]: !prev[id] }));
+// Progress bar
+const Bar: React.FC<{ value: number; total: number; color: string }> = ({ value, total, color }) => {
+  const pct = total > 0 ? Math.round((value / total) * 100) : 0;
+  return (
+    <div className="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
+      <div className="h-1.5 rounded-full transition-all duration-700" style={{ width: `${pct}%`, background: color }} />
+    </div>
+  );
+};
 
-  const totalPublicItems = publicItems.length;
-  const totalMembers     = groupedByMember.length;
-  const hilangCount      = publicItems.filter(i => i.status === 'Hilang').length;
+export const SharedBoardView: React.FC<SharedBoardViewProps> = ({ onNavigate }) => {
+  const {
+    inventory,
+    borrowings,
+    facilities,
+    rooms,
+    eventSetups,
+    transports,
+    maintenanceLogs,
+    users,
+    currentUser,
+  } = usePerkab();
+
+  // ── Computed Stats ──────────────────────────────────────────────────────
+  const stats = useMemo(() => {
+    const invAvailable   = inventory.filter(i => i.availableQty > 0).length;
+    const invRusak       = inventory.filter(i => i.condition === 'Rusak').length;
+
+    const borActive      = borrowings.filter(b => b.status === 'Dipinjam').length;
+    const borTerlambat   = borrowings.filter(b => b.status === 'Terlambat').length;
+    const borReturned    = borrowings.filter(b => b.status === 'Dikembalikan').length;
+
+    const facBaik        = facilities.filter(f => f.status === 'Sangat Baik').length;
+    const facIssue       = facilities.filter(f => f.status !== 'Sangat Baik').length;
+
+    const evtActive      = eventSetups.filter(e => e.setupStatus !== 'Selesai').length;
+    const evtDone        = eventSetups.filter(e => e.setupStatus === 'Selesai').length;
+
+    const trpBerjalan    = transports.filter(t => t.status === 'Berjalan').length;
+    const trpJadwal      = transports.filter(t => t.status === 'Jadwal').length;
+
+    const mtnPending     = maintenanceLogs.filter(m => m.status !== 'Selesai Perbaikan').length;
+    const mtnDone        = maintenanceLogs.filter(m => m.status === 'Selesai Perbaikan').length;
+
+    return {
+      inventory:   { total: inventory.length,       available: invAvailable, rusak: invRusak },
+      borrowings:  { total: borrowings.length,       active: borActive, terlambat: borTerlambat, returned: borReturned },
+      facilities:  { total: facilities.length,       baik: facBaik, issue: facIssue },
+      rooms:       { total: rooms.length },
+      events:      { total: eventSetups.length,      active: evtActive, done: evtDone },
+      transports:  { total: transports.length,       berjalan: trpBerjalan, jadwal: trpJadwal },
+      maintenance: { total: maintenanceLogs.length,  pending: mtnPending, done: mtnDone },
+      users:       { total: users.length },
+    };
+  }, [inventory, borrowings, facilities, rooms, eventSetups, transports, maintenanceLogs, users]);
+
+  const totalItems      = stats.inventory.total + stats.borrowings.total + stats.events.total + stats.transports.total;
+  const totalIssues     = stats.borrowings.terlambat + stats.facilities.issue + stats.maintenance.pending;
+  const overallHealth   = totalItems > 0 ? Math.max(0, Math.round(100 - (totalIssues / Math.max(totalItems, 1)) * 100)) : 100;
+
+  // ── Module Cards Config ─────────────────────────────────────────────────
+  const modules = [
+    {
+      id: 'inventory' as TabType,
+      label: 'Pendataan Logistik',
+      desc: 'Katalog & Inventaris Barang',
+      icon: PackageCheck,
+      gradient: 'from-emerald-500/20 to-teal-600/10',
+      border: 'border-emerald-500/20',
+      iconBg: 'bg-emerald-500/15 text-emerald-400',
+      accentColor: '#10b981',
+      primary: { label: 'Total Barang', value: stats.inventory.total },
+      secondary: [
+        { label: 'Tersedia',  value: stats.inventory.available, color: 'text-emerald-400' },
+        { label: 'Rusak',     value: stats.inventory.rusak,     color: 'text-rose-400' },
+      ],
+      ring: { value: stats.inventory.available, total: stats.inventory.total, color: '#10b981' },
+      alert: stats.inventory.rusak > 0 ? { msg: `${stats.inventory.rusak} barang rusak`, type: 'warn' as const } : null,
+    },
+    {
+      id: 'borrowings' as TabType,
+      label: 'Peminjaman Alat',
+      desc: 'Pinjam Alat Warga/Kampus',
+      icon: Handshake,
+      gradient: 'from-amber-500/20 to-orange-600/10',
+      border: 'border-amber-500/20',
+      iconBg: 'bg-amber-500/15 text-amber-400',
+      accentColor: '#f59e0b',
+      primary: { label: 'Total Peminjaman', value: stats.borrowings.total },
+      secondary: [
+        { label: 'Aktif',       value: stats.borrowings.active,    color: 'text-amber-400' },
+        { label: 'Terlambat',   value: stats.borrowings.terlambat, color: 'text-rose-400' },
+        { label: 'Dikembalikan',value: stats.borrowings.returned,  color: 'text-emerald-400' },
+      ],
+      ring: { value: stats.borrowings.returned, total: stats.borrowings.total, color: '#f59e0b' },
+      alert: stats.borrowings.terlambat > 0 ? { msg: `${stats.borrowings.terlambat} terlambat!`, type: 'danger' as const } : null,
+    },
+    {
+      id: 'posko' as TabType,
+      label: 'Akomodasi & Posko',
+      desc: 'Listrik, Air, Kamar & Dapur',
+      icon: Home,
+      gradient: 'from-sky-500/20 to-blue-600/10',
+      border: 'border-sky-500/20',
+      iconBg: 'bg-sky-500/15 text-sky-400',
+      accentColor: '#0ea5e9',
+      primary: { label: 'Fasilitas Terpantau', value: stats.facilities.total },
+      secondary: [
+        { label: 'Kondisi Baik', value: stats.facilities.baik,  color: 'text-emerald-400' },
+        { label: 'Perlu Perhatian', value: stats.facilities.issue, color: 'text-amber-400' },
+        { label: 'Kamar', value: stats.rooms.total, color: 'text-sky-400' },
+      ],
+      ring: { value: stats.facilities.baik, total: stats.facilities.total, color: '#0ea5e9' },
+      alert: stats.facilities.issue > 0 ? { msg: `${stats.facilities.issue} fasilitas perlu perhatian`, type: 'warn' as const } : null,
+    },
+    {
+      id: 'events' as TabType,
+      label: 'Persiapan Tempat',
+      desc: 'Logistik Proker Acara',
+      icon: CalendarCheck,
+      gradient: 'from-teal-500/20 to-cyan-600/10',
+      border: 'border-teal-500/20',
+      iconBg: 'bg-teal-500/15 text-teal-400',
+      accentColor: '#14b8a6',
+      primary: { label: 'Total Proker', value: stats.events.total },
+      secondary: [
+        { label: 'Berlangsung', value: stats.events.active, color: 'text-teal-400' },
+        { label: 'Selesai',     value: stats.events.done,   color: 'text-emerald-400' },
+      ],
+      ring: { value: stats.events.done, total: stats.events.total, color: '#14b8a6' },
+      alert: null,
+    },
+    {
+      id: 'transport' as TabType,
+      label: 'Pengaturan Transportasi',
+      desc: 'Armada & Mobilisasi',
+      icon: Truck,
+      gradient: 'from-violet-500/20 to-purple-600/10',
+      border: 'border-violet-500/20',
+      iconBg: 'bg-violet-500/15 text-violet-400',
+      accentColor: '#8b5cf6',
+      primary: { label: 'Total Armada', value: stats.transports.total },
+      secondary: [
+        { label: 'Berjalan', value: stats.transports.berjalan, color: 'text-violet-400' },
+        { label: 'Terjadwal', value: stats.transports.jadwal,  color: 'text-sky-400' },
+      ],
+      ring: { value: stats.transports.berjalan + stats.transports.jadwal, total: stats.transports.total, color: '#8b5cf6' },
+      alert: null,
+    },
+    {
+      id: 'maintenance' as TabType,
+      label: 'Pemeliharaan Barang',
+      desc: 'Barang Rusak & Retur',
+      icon: Wrench,
+      gradient: 'from-rose-500/20 to-pink-600/10',
+      border: 'border-rose-500/20',
+      iconBg: 'bg-rose-500/15 text-rose-400',
+      accentColor: '#f43f5e',
+      primary: { label: 'Total Laporan', value: stats.maintenance.total },
+      secondary: [
+        { label: 'Pending',   value: stats.maintenance.pending, color: 'text-rose-400' },
+        { label: 'Selesai',   value: stats.maintenance.done,    color: 'text-emerald-400' },
+      ],
+      ring: { value: stats.maintenance.done, total: stats.maintenance.total, color: '#f43f5e' },
+      alert: stats.maintenance.pending > 0 ? { msg: `${stats.maintenance.pending} laporan menunggu`, type: 'warn' as const } : null,
+    },
+  ];
 
   return (
     <div className="space-y-6">
-      {/* Header */}
+
+      {/* ── HERO ─────────────────────────────────────────────────────── */}
       <div className="relative overflow-hidden glass-card rounded-2xl p-6 border border-emerald-500/20">
         {/* Decorative blobs */}
-        <div className="absolute -top-8 -right-8 w-40 h-40 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute -bottom-8 -left-8 w-40 h-40 bg-violet-500/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute -top-10 -right-10 w-56 h-56 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute -bottom-10 -left-10 w-56 h-56 bg-violet-500/10  rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-32 bg-teal-500/5 rounded-full blur-3xl pointer-events-none" />
 
-        <div className="relative flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="relative flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+          {/* Title */}
           <div>
-            <h1 className="text-2xl font-bold text-slate-100 flex items-center gap-2">
-              <LayoutGrid className="w-6 h-6 text-emerald-400" />
-              Papan Logistik Bersama
+            <div className="flex items-center gap-2 mb-2">
+              <div className="p-2 rounded-xl bg-emerald-500/15 border border-emerald-500/20">
+                <LayoutGrid className="w-5 h-5 text-emerald-400" />
+              </div>
+              <span className="text-xs font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full uppercase tracking-widest">
+                Papan Informasi Publik
+              </span>
+            </div>
+            <h1 className="text-2xl font-black text-slate-100 leading-tight">
+              Status Logistik & Operasional
             </h1>
-            <p className="text-sm text-slate-400 mt-1">
-              Semua barang publik anggota &amp; inventaris kelompok KKN
+            <p className="text-sm text-slate-400 mt-1.5">
+              Ringkasan seluruh modul perkab KKN —{' '}
+              <span className="text-emerald-400 font-semibold capitalize">{currentUser?.name}</span>
             </p>
           </div>
-          <div className="flex items-center gap-2 text-xs text-slate-400 bg-slate-800/60 rounded-xl px-3 py-2 border border-slate-700/60">
-            <Globe className="w-3.5 h-3.5 text-emerald-400" />
-            <span>Hanya item <strong className="text-emerald-400">publik</strong> yang ditampilkan</span>
-            <Lock className="w-3.5 h-3.5 text-slate-500 ml-1" />
-            <span className="text-slate-500">Item privat disembunyikan</span>
-          </div>
-        </div>
 
-        {/* Stats strip */}
-        <div className="relative grid grid-cols-3 gap-4 mt-5 pt-5 border-t border-slate-800/60">
-          <div className="text-center">
-            <div className="text-3xl font-black text-emerald-400">{totalMembers}</div>
-            <div className="text-xs text-slate-400 mt-0.5">Anggota Berbagi</div>
-          </div>
-          <div className="text-center">
-            <div className="text-3xl font-black text-violet-400">{totalPublicItems}</div>
-            <div className="text-xs text-slate-400 mt-0.5">Item Publik</div>
-          </div>
-          <div className="text-center">
-            <div className={`text-3xl font-black ${hilangCount > 0 ? 'text-rose-400' : 'text-slate-400'}`}>{hilangCount}</div>
-            <div className="text-xs text-slate-400 mt-0.5">Item Hilang</div>
-          </div>
-        </div>
-      </div>
-
-      {/* Tab + Filters */}
-      <div className="glass-card rounded-xl p-4 space-y-3">
-        {/* Tab switcher */}
-        <div className="flex gap-2">
-          <button
-            onClick={() => setActiveTab('personal')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
-              activeTab === 'personal'
-                ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-600/20'
-                : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
-            }`}
-          >
-            <Backpack className="w-4 h-4" />
-            Logistik Anggota
-            <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold ${activeTab === 'personal' ? 'bg-white/20 text-white' : 'bg-slate-700 text-slate-400'}`}>
-              {totalPublicItems}
-            </span>
-          </button>
-          <button
-            onClick={() => setActiveTab('inventory')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
-              activeTab === 'inventory'
-                ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-600/20'
-                : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
-            }`}
-          >
-            <PackageCheck className="w-4 h-4" />
-            Inventaris Kelompok
-            <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold ${activeTab === 'inventory' ? 'bg-white/20 text-white' : 'bg-slate-700 text-slate-400'}`}>
-              {inventory.length}
-            </span>
-          </button>
-        </div>
-
-        {/* Search + filter */}
-        <div className="flex flex-wrap gap-3">
-          <div className="flex-1 min-w-50 relative">
-            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-            <input
-              type="text"
-              placeholder="Cari nama barang atau kategori..."
-              value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
-              className="w-full bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-xl pl-9 pr-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-            />
-          </div>
-          {activeTab === 'personal' && (
-            <select
-              value={filterMember}
-              onChange={e => setFilterMember(e.target.value)}
-              className="bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-xl px-3 py-2 focus:ring-1 focus:ring-emerald-500"
-            >
-              <option value="ALL">Semua Anggota</option>
-              {groupedByMember.map(g => (
-                <option key={g.id} value={g.id}>{g.name}</option>
-              ))}
-            </select>
-          )}
-        </div>
-      </div>
-
-      {/* Personal Tab */}
-      {activeTab === 'personal' && (
-        <>
-          {filteredGroups.length === 0 ? (
-            <div className="glass-card rounded-2xl p-12 text-center">
-              <Users className="w-12 h-12 text-slate-600 mx-auto mb-3" />
-              <p className="text-slate-400 font-medium">Belum ada item publik dari anggota</p>
-              <p className="text-xs text-slate-500 mt-1">
-                Anggota perlu mengatur item mereka ke <strong>Mode Publik</strong> di halaman Logistik Pribadi
-              </p>
+          {/* Health meter */}
+          <div className="flex items-center gap-5 shrink-0">
+            {/* Donut */}
+            <div className="relative">
+              <RingChart value={overallHealth} total={100} color={overallHealth >= 80 ? '#10b981' : overallHealth >= 60 ? '#f59e0b' : '#f43f5e'} size={72} />
+              <div className="absolute inset-0 flex items-center justify-center">
+                <span className={`text-sm font-black ${overallHealth >= 80 ? 'text-emerald-400' : overallHealth >= 60 ? 'text-amber-400' : 'text-rose-400'}`}>
+                  {overallHealth}%
+                </span>
+              </div>
             </div>
-          ) : (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              {filteredGroups.map((group, idx) => {
-                const avatarGrad = MEMBER_AVATAR_COLORS[idx % MEMBER_AVATAR_COLORS.length];
-                const isExpanded = expandedCards[group.id] !== false; // default expanded
-                const previewItems = isExpanded ? group.items : group.items.slice(0, 3);
-                const terbawa = group.items.filter(i => i.status === 'Terbawa').length;
-                const hilang  = group.items.filter(i => i.status === 'Hilang').length;
-                const dipinjam = group.items.filter(i => i.status === 'Dipinjamkan').length;
-
-                return (
-                  <div key={group.id} className="glass-card rounded-2xl overflow-hidden border border-slate-800/60 hover:border-emerald-500/20 transition-all">
-                    {/* Member header */}
-                    <div className="flex items-center justify-between p-4 bg-linear-to-r from-slate-900/80 to-slate-800/40 border-b border-slate-800/60">
-                      <div className="flex items-center gap-3">
-                        <div className={`w-10 h-10 rounded-full bg-linear-to-br ${avatarGrad} flex items-center justify-center text-white font-black text-sm shadow-lg`}>
-                          {group.name.charAt(0).toUpperCase()}
-                        </div>
-                        <div>
-                          <div className="font-bold text-slate-100 text-sm capitalize">{group.name}</div>
-                          <div className="text-[10px] text-slate-400">{group.items.length} item publik</div>
-                        </div>
-                      </div>
-                      {/* Mini stats */}
-                      <div className="flex items-center gap-2">
-                        {terbawa > 0  && <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full">✓ {terbawa}</span>}
-                        {dipinjam > 0 && <span className="text-[10px] font-bold text-sky-400 bg-sky-500/10 border border-sky-500/20 px-2 py-0.5 rounded-full">↗ {dipinjam}</span>}
-                        {hilang > 0   && <span className="text-[10px] font-bold text-rose-400 bg-rose-500/10 border border-rose-500/20 px-2 py-0.5 rounded-full">✗ {hilang}</span>}
-                        <button
-                          onClick={() => toggleCard(group.id)}
-                          className="p-1.5 rounded-lg hover:bg-slate-700 text-slate-400 transition-colors ml-1"
-                        >
-                          {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* Items list */}
-                    <div className="p-3 space-y-2">
-                      {previewItems.map(item => {
-                        const st = STATUS_CONFIG[item.status];
-                        const StatusIcon = st.icon;
-                        const dotColor = CATEGORY_DOT[item.category] || 'bg-slate-400';
-                        return (
-                          <div key={item.id} className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-slate-800/60 transition-colors group">
-                            <div className={`w-2 h-2 rounded-full ${dotColor} shrink-0`} />
-                            <div className="flex-1 min-w-0">
-                              <div className="text-sm font-semibold text-slate-200 truncate">{item.itemName}</div>
-                              <div className="text-[10px] text-slate-500">{item.category} · {item.quantity} {item.unit}</div>
-                            </div>
-                            <div className={`flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-lg border shrink-0 ${st.bg}`}>
-                              <StatusIcon className={`w-3 h-3 ${st.color}`} />
-                              <span className={st.color}>{item.status}</span>
-                            </div>
-                          </div>
-                        );
-                      })}
-
-                      {/* Show more / less */}
-                      {group.items.length > 3 && (
-                        <button
-                          onClick={() => toggleCard(group.id)}
-                          className="w-full text-center text-xs text-emerald-400 hover:text-emerald-300 py-2 font-semibold transition-colors"
-                        >
-                          {isExpanded
-                            ? `Sembunyikan (tampilkan 3 dari ${group.items.length})`
-                            : `Lihat ${group.items.length - 3} item lainnya...`
-                          }
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
+            <div>
+              <div className="text-xs font-bold text-slate-300 mb-0.5">Kesehatan Sistem</div>
+              <div className={`text-sm font-black flex items-center gap-1 ${overallHealth >= 80 ? 'text-emerald-400' : overallHealth >= 60 ? 'text-amber-400' : 'text-rose-400'}`}>
+                {overallHealth >= 80 ? <><CheckCircle2 className="w-3.5 h-3.5" /> Sangat Baik</> : overallHealth >= 60 ? <><AlertCircle className="w-3.5 h-3.5" /> Perlu Perhatian</> : <><XCircle className="w-3.5 h-3.5" /> Kritis</>}
+              </div>
+              <div className="text-[10px] text-slate-500 mt-0.5">{totalIssues} isu aktif terdeteksi</div>
             </div>
-          )}
-        </>
-      )}
+          </div>
+        </div>
 
-      {/* Inventory Tab */}
-      {activeTab === 'inventory' && (
-        <>
-          {filteredInventory.length === 0 ? (
-            <div className="glass-card rounded-2xl p-12 text-center">
-              <Package className="w-12 h-12 text-slate-600 mx-auto mb-3" />
-              <p className="text-slate-400 font-medium">Tidak ada inventaris yang cocok</p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
-              {filteredInventory.map(item => (
-                <div key={item.id} className="glass-card rounded-2xl p-4 border border-slate-800/60 hover:border-emerald-500/20 transition-all hover:scale-[1.01]">
-                  {/* Top */}
-                  <div className="flex items-start justify-between gap-2 mb-3">
-                    <div>
-                      <div className="text-xs text-slate-500 font-mono">{item.code}</div>
-                      <h3 className="font-bold text-slate-100 text-sm mt-0.5 leading-tight">{item.name}</h3>
-                    </div>
-                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border shrink-0 ${
-                      item.condition === 'Bagus'           ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30' :
-                      item.condition === 'Perlu Perbaikan' ? 'bg-amber-500/15 text-amber-300 border-amber-500/30' :
-                                                             'bg-rose-500/15 text-rose-300 border-rose-500/30'
-                    }`}>
-                      {item.condition}
-                    </span>
-                  </div>
-
-                  {/* Details grid */}
-                  <div className="grid grid-cols-2 gap-2 text-xs mb-3">
-                    <div className="bg-slate-900/60 rounded-lg p-2">
-                      <div className="text-slate-500 text-[10px] mb-0.5">Kategori</div>
-                      <div className="font-semibold text-slate-300">{item.category}</div>
-                    </div>
-                    <div className="bg-slate-900/60 rounded-lg p-2">
-                      <div className="text-slate-500 text-[10px] mb-0.5">Tersedia</div>
-                      <div className="font-bold text-emerald-400">{item.availableQty}<span className="text-slate-400 font-normal">/{item.quantity} {item.unit}</span></div>
-                    </div>
-                    <div className="bg-slate-900/60 rounded-lg p-2">
-                      <div className="text-slate-500 text-[10px] mb-0.5">Kepemilikan</div>
-                      <div className="font-semibold text-slate-300">{item.ownership}</div>
-                    </div>
-                    <div className="bg-slate-900/60 rounded-lg p-2">
-                      <div className="text-slate-500 text-[10px] mb-0.5">Lokasi</div>
-                      <div className="font-semibold text-slate-300 truncate">{item.location}</div>
-                    </div>
-                  </div>
-
-                  {/* Availability bar */}
-                  <div className="space-y-1">
-                    <div className="flex justify-between text-[10px] text-slate-500">
-                      <span>Ketersediaan</span>
-                      <span className={item.availableQty === 0 ? 'text-rose-400 font-bold' : 'text-emerald-400'}>
-                        {item.quantity > 0 ? Math.round((item.availableQty / item.quantity) * 100) : 0}%
-                      </span>
-                    </div>
-                    <div className="w-full bg-slate-800 rounded-full h-1.5">
-                      <div
-                        className={`h-1.5 rounded-full transition-all ${item.availableQty === 0 ? 'bg-rose-500' : 'bg-emerald-500'}`}
-                        style={{ width: `${item.quantity > 0 ? (item.availableQty / item.quantity) * 100 : 0}%` }}
-                      />
-                    </div>
-                  </div>
-
-                  {item.notes && (
-                    <div className="mt-2 flex items-start gap-1.5 text-[10px] text-slate-500">
-                      <StickyNote className="w-3 h-3 mt-0.5 shrink-0" />
-                      <span className="italic">{item.notes}</span>
-                    </div>
-                  )}
+        {/* ── Global Stats Strip ───────────────────────────────────── */}
+        <div className="relative grid grid-cols-2 sm:grid-cols-4 gap-4 mt-6 pt-6 border-t border-slate-800/60">
+          {[
+            { label: 'Total Barang',    value: stats.inventory.total,  icon: PackageCheck, color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
+            { label: 'Peminjaman Aktif',value: stats.borrowings.active, icon: Handshake,    color: 'text-amber-400',   bg: 'bg-amber-500/10' },
+            { label: 'Anggota KKN',     value: stats.users.total,      icon: Users,        color: 'text-sky-400',     bg: 'bg-sky-500/10' },
+            { label: 'Isu Terdeteksi',  value: totalIssues,            icon: Activity,     color: totalIssues > 0 ? 'text-rose-400' : 'text-emerald-400', bg: totalIssues > 0 ? 'bg-rose-500/10' : 'bg-emerald-500/10' },
+          ].map(s => {
+            const Icon = s.icon;
+            return (
+              <div key={s.label} className="flex items-center gap-3">
+                <div className={`p-2.5 rounded-xl ${s.bg} shrink-0`}>
+                  <Icon className={`w-4 h-4 ${s.color}`} />
                 </div>
-              ))}
+                <div>
+                  <div className={`text-xl font-black ${s.color}`}>{s.value}</div>
+                  <div className="text-[10px] text-slate-400 leading-tight">{s.label}</div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* ── MODULE GRID ──────────────────────────────────────────────── */}
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+        {modules.map(mod => {
+          const Icon = mod.icon;
+          const pct  = mod.ring.total > 0 ? Math.round((mod.ring.value / mod.ring.total) * 100) : 0;
+          return (
+            <div
+              key={mod.id}
+              className={`group glass-card rounded-2xl overflow-hidden border ${mod.border} bg-linear-to-br ${mod.gradient} hover:scale-[1.02] transition-all duration-200 cursor-pointer`}
+              onClick={() => onNavigate?.(mod.id)}
+            >
+              {/* Card header */}
+              <div className="p-4 pb-3">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <div className={`p-2.5 rounded-xl ${mod.iconBg} border border-white/5`}>
+                      <Icon className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <div className="text-sm font-bold text-slate-100 leading-tight">{mod.label}</div>
+                      <div className="text-[10px] text-slate-400 mt-0.5">{mod.desc}</div>
+                    </div>
+                  </div>
+                  {/* Mini ring + pct */}
+                  <div className="relative shrink-0">
+                    <RingChart value={mod.ring.value} total={mod.ring.total} color={mod.accentColor} size={44} />
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <span className="text-[9px] font-black" style={{ color: mod.accentColor }}>{pct}%</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Alert badge */}
+                {mod.alert && (
+                  <div className={`mt-3 flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[10px] font-bold border ${
+                    mod.alert.type === 'danger'
+                      ? 'bg-rose-500/10 border-rose-500/30 text-rose-400'
+                      : 'bg-amber-500/10 border-amber-500/30 text-amber-400'
+                  }`}>
+                    {mod.alert.type === 'danger' ? <XCircle className="w-3 h-3" /> : <AlertCircle className="w-3 h-3" />}
+                    {mod.alert.msg}
+                  </div>
+                )}
+              </div>
+
+              {/* Stats row */}
+              <div className="px-4 pb-3">
+                <div className={`grid gap-2 ${mod.secondary.length === 3 ? 'grid-cols-3' : 'grid-cols-2'}`}>
+                  {mod.secondary.map(s => (
+                    <div key={s.label} className="bg-slate-900/50 rounded-xl p-2.5 text-center">
+                      <div className={`text-lg font-black ${s.color}`}>{s.value}</div>
+                      <div className="text-[9px] text-slate-400 leading-tight mt-0.5">{s.label}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Progress bar */}
+              <div className="px-4 pb-4 space-y-1">
+                <div className="flex justify-between text-[10px] text-slate-500">
+                  <span>{mod.primary.label}</span>
+                  <span className="font-bold" style={{ color: mod.accentColor }}>{mod.primary.value} item</span>
+                </div>
+                <Bar value={mod.ring.value} total={mod.ring.total} color={mod.accentColor} />
+              </div>
+
+              {/* Footer CTA */}
+              <div className={`px-4 py-2.5 border-t border-white/5 flex items-center justify-between text-[10px] font-semibold text-slate-400 group-hover:text-slate-200 transition-colors`}>
+                <span>Lihat detail modul</span>
+                <ArrowRight className="w-3.5 h-3.5 translate-x-0 group-hover:translate-x-1 transition-transform" />
+              </div>
             </div>
-          )}
-        </>
-      )}
+          );
+        })}
+      </div>
+
+      {/* ── RECENT STATUS BADGES ─────────────────────────────────────── */}
+      <div className="glass-card rounded-2xl p-5 border border-slate-800/60">
+        <div className="flex items-center gap-2 mb-4">
+          <Zap className="w-4 h-4 text-amber-400" />
+          <h2 className="text-sm font-bold text-slate-200">Status Cepat</h2>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+
+          {/* Inventory health */}
+          <div className="bg-slate-900/60 rounded-xl p-3.5">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs text-slate-400 font-semibold">Ketersediaan Barang</span>
+              <span className="text-xs font-black text-emerald-400">{stats.inventory.available}/{stats.inventory.total}</span>
+            </div>
+            <Bar value={stats.inventory.available} total={stats.inventory.total} color="#10b981" />
+            <div className="text-[10px] text-slate-500 mt-1.5">
+              {stats.inventory.rusak > 0 ? `⚠ ${stats.inventory.rusak} barang kondisi rusak` : '✓ Semua barang dalam kondisi baik'}
+            </div>
+          </div>
+
+          {/* Borrowing return rate */}
+          <div className="bg-slate-900/60 rounded-xl p-3.5">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs text-slate-400 font-semibold">Tingkat Pengembalian</span>
+              <span className="text-xs font-black text-amber-400">{stats.borrowings.returned}/{stats.borrowings.total}</span>
+            </div>
+            <Bar value={stats.borrowings.returned} total={stats.borrowings.total} color="#f59e0b" />
+            <div className="text-[10px] text-slate-500 mt-1.5">
+              {stats.borrowings.terlambat > 0 ? `🔴 ${stats.borrowings.terlambat} peminjaman terlambat` : `🟢 ${stats.borrowings.active} aktif dipinjam`}
+            </div>
+          </div>
+
+          {/* Facility health */}
+          <div className="bg-slate-900/60 rounded-xl p-3.5">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs text-slate-400 font-semibold">Kondisi Fasilitas Posko</span>
+              <span className="text-xs font-black text-sky-400">{stats.facilities.baik}/{stats.facilities.total}</span>
+            </div>
+            <Bar value={stats.facilities.baik} total={stats.facilities.total} color="#0ea5e9" />
+            <div className="text-[10px] text-slate-500 mt-1.5">
+              {stats.facilities.issue > 0 ? `⚠ ${stats.facilities.issue} fasilitas perlu pengecekan` : '✓ Semua fasilitas dalam kondisi baik'}
+            </div>
+          </div>
+
+          {/* Event progress */}
+          <div className="bg-slate-900/60 rounded-xl p-3.5">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs text-slate-400 font-semibold">Selesai Persiapan Tempat</span>
+              <span className="text-xs font-black text-teal-400">{stats.events.done}/{stats.events.total}</span>
+            </div>
+            <Bar value={stats.events.done} total={stats.events.total} color="#14b8a6" />
+            <div className="text-[10px] text-slate-500 mt-1.5">
+              {stats.events.active > 0 ? `⏳ ${stats.events.active} proker sedang dipersiapkan` : '✓ Semua proker selesai disiapkan'}
+            </div>
+          </div>
+
+          {/* Transport active */}
+          <div className="bg-slate-900/60 rounded-xl p-3.5">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs text-slate-400 font-semibold">Transportasi Aktif</span>
+              <span className="text-xs font-black text-violet-400">{stats.transports.berjalan + stats.transports.jadwal}/{stats.transports.total}</span>
+            </div>
+            <Bar value={stats.transports.berjalan + stats.transports.jadwal} total={stats.transports.total} color="#8b5cf6" />
+            <div className="text-[10px] text-slate-500 mt-1.5">
+              {stats.transports.berjalan > 0 ? `🚛 ${stats.transports.berjalan} armada sedang berjalan` : `📅 ${stats.transports.jadwal} armada terjadwal`}
+            </div>
+          </div>
+
+          {/* Maintenance resolve rate */}
+          <div className="bg-slate-900/60 rounded-xl p-3.5">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs text-slate-400 font-semibold">Selesai Pemeliharaan</span>
+              <span className="text-xs font-black text-rose-400">{stats.maintenance.done}/{stats.maintenance.total}</span>
+            </div>
+            <Bar value={stats.maintenance.done} total={stats.maintenance.total} color="#f43f5e" />
+            <div className="text-[10px] text-slate-500 mt-1.5">
+              {stats.maintenance.pending > 0 ? `🔧 ${stats.maintenance.pending} laporan belum diselesaikan` : '✓ Semua laporan kerusakan teratasi'}
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      {/* ── FOOTER NOTE ──────────────────────────────────────────────── */}
+      <div className="flex items-center justify-center gap-3 text-[10px] text-slate-600 py-2">
+        <Shield className="w-3 h-3" />
+        <span>Data ditampilkan secara real-time dari sistem Perkab KKN</span>
+        <Star className="w-3 h-3" />
+        <span>Klik modul untuk membuka detail</span>
+        <TrendingUp className="w-3 h-3" />
+      </div>
+
     </div>
   );
 };

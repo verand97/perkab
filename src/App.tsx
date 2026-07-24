@@ -104,7 +104,7 @@ const AppContent: React.FC = () => {
 
           {activeTab === 'personal-logistics' && <PersonalLogisticsView />}
 
-          {activeTab === 'shared-board' && <SharedBoardView />}
+          {activeTab === 'shared-board' && <SharedBoardView onNavigate={setActiveTab} />}
         </section>
       </main>
 
