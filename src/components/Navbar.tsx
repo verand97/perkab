@@ -36,9 +36,6 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenExport, onOpenSettings }) 
               <span className="text-lg font-black tracking-tight text-white dark:text-white light:text-slate-900 font-heading">
                 PERKAB<span className="text-emerald-400">.KKN</span>
               </span>
-              <span className="text-[10px] font-bold tracking-widest uppercase px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                PRO v2.0
-              </span>
             </div>
             <p className="text-[11px] text-slate-400 light:text-slate-500 font-medium hidden sm:block">
               Perlengkapan, Akomodasi & Logistik Kelompok
