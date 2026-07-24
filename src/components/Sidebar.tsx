@@ -11,7 +11,6 @@ import {
   Users,
   ShieldCheck,
   Backpack,
-  LayoutGrid,
 } from 'lucide-react';
 import { usePerkab } from '../context/PerkabContext';
 
@@ -24,8 +23,7 @@ export type TabType =
   | 'transport'
   | 'maintenance'
   | 'users'
-  | 'personal-logistics'
-  | 'shared-board';
+  | 'personal-logistics';
 
 interface SidebarProps {
   activeTab: TabType;
@@ -110,13 +108,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
       icon: Backpack,
       description: 'Barang Bawaan & Kebutuhan',
       badgeColor: 'bg-violet-500/20 text-violet-300 border-violet-500/30',
-    },
-    {
-      id: 'shared-board' as TabType,
-      label: 'Papan Bersama',
-      icon: LayoutGrid,
-      description: 'Lihat Semua Item Publik',
-      badgeColor: 'bg-sky-500/20 text-sky-300 border-sky-500/30',
     },
   ];
 

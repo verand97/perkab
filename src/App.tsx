@@ -16,7 +16,6 @@ import { SettingsModal } from './components/SettingsModal';
 import { ToastContainer } from './components/ToastContainer';
 import { ConfirmModal } from './components/ConfirmModal';
 import { PersonalLogisticsView } from './components/PersonalLogisticsView';
-import { SharedBoardView } from './components/SharedBoardView';
 import { PublicLandingPage } from './components/PublicLandingPage';
 
 const GlobalOverlay: React.FC = () => {
@@ -108,8 +107,6 @@ const AppContent: React.FC = () => {
           {activeTab === 'users' && <UserManagementView />}
 
           {activeTab === 'personal-logistics' && <PersonalLogisticsView />}
-
-          {activeTab === 'shared-board' && <SharedBoardView onNavigate={setActiveTab} />}
         </section>
       </main>
 
