@@ -12,7 +12,7 @@ import {
 export const INITIAL_USERS: UserAccount[] = [
   {
     id: 'usr-admin',
-    name: 'muhammad verri andika pratama',
+    name: 'Muhammad Verri Andika Pratama',
     nim: '231240001452',
     role: 'Admin',
     position: 'Koordinator Utama Perkab (Admin)',

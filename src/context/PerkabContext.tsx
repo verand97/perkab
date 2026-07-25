@@ -204,7 +204,11 @@ export const PerkabProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
-        setUsers(parsed.users?.length ? parsed.users : INITIAL_USERS);
+        const loadedUsers: UserAccount[] = parsed.users?.length ? parsed.users : [...INITIAL_USERS];
+        if (!loadedUsers.some(u => u.nim === '231240001452')) {
+          loadedUsers.unshift(...INITIAL_USERS);
+        }
+        setUsers(loadedUsers);
         setInventory(parsed.inventory?.length ? parsed.inventory : INITIAL_INVENTORY);
         setBorrowings(parsed.borrowings?.length ? parsed.borrowings : INITIAL_BORROWINGS);
         setFacilities(parsed.facilities?.length ? parsed.facilities : INITIAL_POSKO_FACILITIES);
@@ -219,7 +223,7 @@ export const PerkabProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       }
     }
 
-    setUsers(INITIAL_USERS);
+    setUsers([...INITIAL_USERS]);
     setInventory(INITIAL_INVENTORY);
     setBorrowings(INITIAL_BORROWINGS);
     setFacilities(INITIAL_POSKO_FACILITIES);
@@ -259,9 +263,19 @@ export const PerkabProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         // 1. Users
         const { data: userData } = await client!.from('users').select('*');
         if (userData && userData.length > 0) {
-          setUsers(userData.map((u: any) => ({
-            id: u.id, name: u.name, nim: u.nim, role: u.role, position: u.position,
-          })));
+          const fetchedUsers: UserAccount[] = userData.map((u: any) => ({
+            id: u.id,
+            name: u.name,
+            nim: u.nim,
+            role: u.role,
+            position: u.position || undefined,
+          }));
+          if (!fetchedUsers.some(u => u.nim === '231240001452')) {
+            fetchedUsers.unshift(...INITIAL_USERS);
+          }
+          setUsers(fetchedUsers);
+        } else {
+          setUsers(prev => prev.length > 0 ? prev : [...INITIAL_USERS]);
         }
 
         // 2. Inventory
@@ -373,12 +387,19 @@ export const PerkabProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   // Auth Handlers
   const login = (nameOrNim: string, nim: string): boolean => {
     const query = nameOrNim.trim().toLowerCase();
-    const password = nim.trim();
+    const password = nim.trim().toLowerCase();
 
-    const matchedUser = users.find(u => {
-      const matchName = u.name.trim().toLowerCase() === query;
-      const matchNim = u.nim.trim() === query;
-      const matchPass = u.nim.trim() === password;
+    // Search in users state or fallback to INITIAL_USERS
+    const pool = users.length > 0 ? users : INITIAL_USERS;
+
+    const matchedUser = pool.find(u => {
+      const uName = u.name.trim().toLowerCase();
+      const uNim = u.nim.trim().toLowerCase();
+
+      const matchName = uName === query || uName.includes(query) || query.includes(uName);
+      const matchNim = uNim === query;
+      const matchPass = uNim === password;
+
       return (matchName || matchNim) && matchPass;
     });
 
