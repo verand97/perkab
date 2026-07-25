@@ -42,25 +42,14 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
     setIsTesting(true);
     setTestResult(null);
 
-    const success = await updateSupabaseConfig({
+    const result = await updateSupabaseConfig({
       url: url.trim(),
       anonKey: anonKey.trim(),
       isConnected: false,
     });
 
     setIsTesting(false);
-
-    if (success) {
-      setTestResult({
-        success: true,
-        message: 'Koneksi Supabase Cloud Berhasil! Data terhubung secara online.',
-      });
-    } else {
-      setTestResult({
-        success: false,
-        message: 'Gagal terhubung ke Supabase. Pastikan URL, Anon Key, dan skema tabel sudah dibuat di Supabase Dashboard.',
-      });
-    }
+    setTestResult(result);
   };
 
   const handleCopySql = () => {

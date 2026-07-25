@@ -177,13 +177,28 @@ ALTER TABLE transports ENABLE ROW LEVEL SECURITY;
 ALTER TABLE maintenance_logs ENABLE ROW LEVEL SECURITY;
 ALTER TABLE users ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Public Read/Write Inventory" ON inventory;
 CREATE POLICY "Public Read/Write Inventory" ON inventory FOR ALL USING (true) WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Public Read/Write Borrowings" ON borrowings;
 CREATE POLICY "Public Read/Write Borrowings" ON borrowings FOR ALL USING (true) WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Public Read/Write Facilities" ON posko_facilities;
 CREATE POLICY "Public Read/Write Facilities" ON posko_facilities FOR ALL USING (true) WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Public Read/Write Rooms" ON posko_rooms;
 CREATE POLICY "Public Read/Write Rooms" ON posko_rooms FOR ALL USING (true) WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Public Read/Write Events" ON event_setups;
 CREATE POLICY "Public Read/Write Events" ON event_setups FOR ALL USING (true) WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Public Read/Write Transports" ON transports;
 CREATE POLICY "Public Read/Write Transports" ON transports FOR ALL USING (true) WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Public Read/Write Maintenance" ON maintenance_logs;
 CREATE POLICY "Public Read/Write Maintenance" ON maintenance_logs FOR ALL USING (true) WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Public Read/Write Users" ON users;
 CREATE POLICY "Public Read/Write Users" ON users FOR ALL USING (true) WITH CHECK (true);
 
 -- 9. Tabel Logistik Pribadi Anggota
@@ -203,5 +218,7 @@ CREATE TABLE IF NOT EXISTS personal_logistics (
 );
 
 ALTER TABLE personal_logistics ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Public Read Write Personal Logistics" ON personal_logistics;
 CREATE POLICY "Public Read Write Personal Logistics" ON personal_logistics FOR ALL USING (true) WITH CHECK (true);
 `;

@@ -101,7 +101,7 @@ interface PerkabContextType {
 
   // Config, Reset & Clear
   supabaseConfig: SupabaseConfig;
-  updateSupabaseConfig: (config: SupabaseConfig) => Promise<boolean>;
+  updateSupabaseConfig: (config: SupabaseConfig) => Promise<{ success: boolean; message: string }>;
   resetToSampleData: () => void;
   clearAllData: (clearSupabase?: boolean) => Promise<void>;
 }
@@ -620,35 +620,91 @@ export const PerkabProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     const today = new Date().toISOString().split('T')[0];
     setFacilities(prev => prev.map(f => f.id === id ? { ...f, status, details, lastChecked: today, picName } : f));
     showToast('Status fasilitas posko berhasil diperbarui.', 'success');
+
+    const client = getSupabaseClient();
+    if (client) {
+      client.from('posko_facilities').update({
+        status,
+        details,
+        last_checked: today,
+        pic_name: picName,
+      }).eq('id', id).then();
+    }
   };
 
   const updateRoomLayout = (updatedRoom: PoskoRoomLayout) => {
     setRooms(prev => prev.map(r => r.id === updatedRoom.id ? updatedRoom : r));
     showToast(`Layout ${updatedRoom.roomName} berhasil diperbarui.`, 'success');
+
+    const client = getSupabaseClient();
+    if (client) {
+      client.from('posko_rooms').update({
+        room_name: updatedRoom.roomName,
+        capacity: updatedRoom.capacity,
+        occupants: updatedRoom.occupants,
+        assigned_equipment: updatedRoom.assignedEquipment,
+        notes: updatedRoom.notes || null,
+      }).eq('id', updatedRoom.id).then();
+    }
   };
 
   const addRoomLayout = (room: Omit<PoskoRoomLayout, 'id'>) => {
+    const id = `room-${Date.now()}`;
     const newRoom: PoskoRoomLayout = {
       ...room,
-      id: `room-${Date.now()}`,
+      id,
     };
     setRooms(prev => [...prev, newRoom]);
     showToast(`Ruangan ${room.roomName} berhasil ditambahkan!`, 'success');
+
+    const client = getSupabaseClient();
+    if (client) {
+      client.from('posko_rooms').insert([{
+        id,
+        room_name: room.roomName,
+        capacity: room.capacity,
+        occupants: room.occupants,
+        assigned_equipment: room.assignedEquipment,
+        notes: room.notes || null,
+      }]).then();
+    }
   };
 
   // Event Handlers
   const addEventSetup = (evt: Omit<EventSetup, 'id'>) => {
+    const id = `evt-${Date.now()}`;
     const newEvt: EventSetup = {
       ...evt,
-      id: `evt-${Date.now()}`,
+      id,
     };
     setEventSetups(prev => [newEvt, ...prev]);
     showToast(`Setup proker "${evt.eventName}" berhasil dibuat.`, 'success');
+
+    const client = getSupabaseClient();
+    if (client) {
+      client.from('event_setups').insert([{
+        id,
+        event_name: evt.eventName,
+        event_date: evt.eventDate,
+        location: evt.location,
+        pic_name: evt.picName,
+        setup_status: evt.setupStatus,
+        required_items: evt.requiredItems,
+        notes: evt.notes || null,
+      }]).then();
+    }
   };
 
   const updateEventStatus = (id: string, status: EventSetup['setupStatus']) => {
     setEventSetups(prev => prev.map(e => e.id === id ? { ...e, setupStatus: status } : e));
     showToast('Status alur proker diperbarui.', 'info');
+
+    const client = getSupabaseClient();
+    if (client) {
+      client.from('event_setups').update({
+        setup_status: status,
+      }).eq('id', id).then();
+    }
   };
 
   const toggleEventChecklistItem = (eventId: string, itemId: string) => {
@@ -664,31 +720,76 @@ export const PerkabProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       }
       return evt;
     }));
+
+    const client = getSupabaseClient();
+    if (client) {
+      const target = eventSetups.find(e => e.id === eventId);
+      if (target) {
+        const updatedItems = target.requiredItems.map(item => item.id === itemId ? { ...item, isReady: !item.isReady } : item);
+        client.from('event_setups').update({
+          required_items: updatedItems,
+        }).eq('id', eventId).then();
+      }
+    }
   };
 
   const deleteEventSetup = (id: string) => {
     setEventSetups(prev => prev.filter(e => e.id !== id));
     showToast('Setup proker dihapus.', 'info');
+
+    const client = getSupabaseClient();
+    if (client) {
+      client.from('event_setups').delete().eq('id', id).then();
+    }
   };
 
   // Transport Handlers
   const addTransportRecord = (trp: Omit<TransportRecord, 'id'>) => {
+    const id = `trp-${Date.now()}`;
     const newTrp: TransportRecord = {
       ...trp,
-      id: `trp-${Date.now()}`,
+      id,
     };
     setTransports(prev => [newTrp, ...prev]);
     showToast(`Jadwal armada ${trp.vehicleName} berhasil disimpan.`, 'success');
+
+    const client = getSupabaseClient();
+    if (client) {
+      client.from('transports').insert([{
+        id,
+        vehicle_name: trp.vehicleName,
+        vehicle_type: trp.vehicleType,
+        driver_name: trp.driverName,
+        purpose: trp.purpose,
+        departure_date: trp.departureDate,
+        return_date: trp.returnDate,
+        cargo_details: trp.cargoDetails,
+        cost: trp.cost,
+        status: trp.status,
+      }]).then();
+    }
   };
 
   const updateTransportStatus = (id: string, status: TransportRecord['status']) => {
     setTransports(prev => prev.map(t => t.id === id ? { ...t, status } : t));
     showToast('Status mobilisasi diperbarui.', 'info');
+
+    const client = getSupabaseClient();
+    if (client) {
+      client.from('transports').update({
+        status,
+      }).eq('id', id).then();
+    }
   };
 
   const deleteTransportRecord = (id: string) => {
     setTransports(prev => prev.filter(t => t.id !== id));
     showToast('Jadwal transportasi dihapus.', 'info');
+
+    const client = getSupabaseClient();
+    if (client) {
+      client.from('transports').delete().eq('id', id).then();
+    }
   };
 
   // Personal Logistics Handlers
@@ -747,13 +848,27 @@ export const PerkabProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   // Maintenance Handlers
   const addMaintenanceLog = (log: Omit<MaintenanceLog, 'id' | 'dateReported'>) => {
     const today = new Date().toISOString().split('T')[0];
+    const id = `mt-${Date.now()}`;
     const newLog: MaintenanceLog = {
       ...log,
-      id: `mt-${Date.now()}`,
+      id,
       dateReported: today,
     };
     setMaintenanceLogs(prev => [newLog, ...prev]);
     showToast(`Laporan kerusakan ${log.itemName} berhasil dibuat.`, 'warning');
+
+    const client = getSupabaseClient();
+    if (client) {
+      client.from('maintenance_logs').insert([{
+        id,
+        item_name: log.itemName,
+        reported_by: log.reportedBy,
+        damage_description: log.damageDescription,
+        estimated_cost: log.estimatedCost,
+        status: log.status,
+        date_reported: today,
+      }]).then();
+    }
   };
 
   const updateMaintenanceStatus = (id: string, status: MaintenanceLog['status'], resolutionNotes?: string) => {
@@ -763,10 +878,18 @@ export const PerkabProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       resolutionNotes: resolutionNotes || m.resolutionNotes,
     } : m));
     showToast('Status perbaikan barang berhasil diperbarui.', 'success');
+
+    const client = getSupabaseClient();
+    if (client) {
+      client.from('maintenance_logs').update({
+        status,
+        resolution_notes: resolutionNotes || null,
+      }).eq('id', id).then();
+    }
   };
 
   // Supabase Config update
-  const updateSupabaseConfig = async (newConfig: SupabaseConfig): Promise<boolean> => {
+  const updateSupabaseConfig = async (newConfig: SupabaseConfig): Promise<{ success: boolean; message: string }> => {
     saveSupabaseConfig(newConfig);
     resetSupabaseClient();
     setSupabaseConfigState(newConfig);
@@ -777,20 +900,38 @@ export const PerkabProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         if (client) {
           const { error } = await client.from('inventory').select('id').limit(1);
           if (!error) {
-            setSupabaseConfigState({ ...newConfig, isConnected: true });
-            saveSupabaseConfig({ ...newConfig, isConnected: true });
+            const activeConfig = { ...newConfig, isConnected: true };
+            setSupabaseConfigState(activeConfig);
+            saveSupabaseConfig(activeConfig);
             showToast('Koneksi Supabase Cloud Berhasil Aktif!', 'success');
-            return true;
+            return { success: true, message: 'Koneksi Supabase Cloud Berhasil! Data terhubung secara online.' };
+          } else {
+            console.error('Supabase test connection error:', error);
+            let message = 'Gagal terhubung ke Supabase. Pastikan URL, Anon Key, dan skema tabel sudah dibuat di Supabase Dashboard.';
+            if (error.code === '42P01' || error.message?.toLowerCase().includes('does not exist')) {
+              message = 'Tabel database "inventory" belum dibuat di Supabase. Silakan klik tombol "Lihat Skema SQL Supabase", salin script SQL, lalu paste & Run di menu SQL Editor Supabase Dashboard.';
+            } else if (error.code === 'PGRST301' || error.message?.toLowerCase().includes('apikey') || error.message?.toLowerCase().includes('jwt')) {
+              message = 'Anon API Key tidak valid. Pastikan Anda menyalin key "anon" "public" dari Supabase Project Settings -> API.';
+            }
+            setSupabaseConfigState({ ...newConfig, isConnected: false });
+            saveSupabaseConfig({ ...newConfig, isConnected: false });
+            showToast('Gagal terhubung ke Supabase Cloud.', 'error');
+            return { success: false, message };
           }
         }
-      } catch (e) {
-        console.error('Supabase test connection failed:', e);
+      } catch (e: any) {
+        console.error('Supabase connection exception:', e);
+        const message = e?.message || 'Gagal terhubung ke Supabase. Periksa koneksi internet & URL Project.';
+        setSupabaseConfigState({ ...newConfig, isConnected: false });
+        saveSupabaseConfig({ ...newConfig, isConnected: false });
+        showToast('Gagal terhubung ke Supabase Cloud.', 'error');
+        return { success: false, message };
       }
     }
     setSupabaseConfigState({ ...newConfig, isConnected: false });
     saveSupabaseConfig({ ...newConfig, isConnected: false });
     showToast('Gagal terhubung ke Supabase Cloud.', 'error');
-    return false;
+    return { success: false, message: 'URL dan Anon Key tidak boleh kosong.' };
   };
 
   const resetToSampleData = () => {
