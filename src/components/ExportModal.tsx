@@ -41,8 +41,8 @@ export const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose }) => 
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md overflow-y-auto">
-      <div className="glass-card w-full max-w-xl rounded-3xl p-6 border border-slate-700 shadow-2xl my-auto max-h-[90vh] flex flex-col space-y-4">
+    <div className="fixed inset-0 z-90 flex items-center justify-center p-3 sm:p-4 bg-slate-950/95 backdrop-blur-xl overflow-y-auto">
+      <div className="glass-card w-full max-w-xl rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-slate-700 shadow-2xl my-auto max-h-[90vh] flex flex-col space-y-4">
         <div className="flex items-center justify-between pb-3 border-b border-slate-800 shrink-0">
           <div className="flex items-center gap-3">
             <div className="p-2.5 rounded-xl bg-linear-to-tr from-emerald-600 to-teal-500 text-white shadow">

@@ -18,7 +18,7 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({ options, onClose }) 
   const isDanger = options.danger !== false;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-sm">
+    <div className="fixed inset-0 z-95 flex items-center justify-center p-3 sm:p-4 bg-slate-950/95 backdrop-blur-xl">
       <div className="glass-panel w-full max-w-md rounded-2xl p-6 border border-slate-700 shadow-2xl space-y-4 relative animate-in fade-in zoom-in-95 duration-150">
         <div className="flex items-start gap-4">
           <div

@@ -17,7 +17,7 @@ export const ToastContainer: React.FC<ToastContainerProps> = ({ toasts, onRemove
   if (toasts.length === 0) return null;
 
   return (
-    <div className="fixed top-4 right-4 z-50 flex flex-col gap-2.5 max-w-sm w-full pointer-events-none px-2 sm:px-0">
+    <div className="fixed top-3 left-3 right-3 sm:left-auto sm:right-4 sm:max-w-sm z-100 flex flex-col gap-2.5 pointer-events-none">
       {toasts.map(toast => {
         const isSuccess = toast.type === 'success';
         const isError = toast.type === 'error';
