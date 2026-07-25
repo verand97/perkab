@@ -346,7 +346,7 @@ export const PerkabProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             id: d.id, ownerId: d.owner_id, ownerName: d.owner_name,
             itemName: d.item_name, category: d.category, quantity: d.quantity,
             unit: d.unit, condition: d.condition, status: d.status,
-            isPrivate: d.is_private, notes: d.notes, created_at: d.created_at,
+            isPrivate: d.is_private, imageUrl: d.image_url, notes: d.notes, created_at: d.created_at,
           })));
         }
       } catch (e) {
@@ -812,6 +812,7 @@ export const PerkabProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         condition: item.condition,
         status: item.status,
         is_private: item.isPrivate,
+        image_url: item.imageUrl || null,
         notes: item.notes || null,
       }]).then();
     }
@@ -831,6 +832,7 @@ export const PerkabProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         condition: updated.condition,
         status: updated.status,
         is_private: updated.isPrivate,
+        image_url: updated.imageUrl || null,
         notes: updated.notes || null,
       }).eq('id', updated.id).then();
     }

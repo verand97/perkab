@@ -181,6 +181,7 @@ export interface PersonalLogisticsItem {
   condition: ItemCondition;
   status: PersonalItemStatus;
   isPrivate: boolean;
+  imageUrl?: string;
   notes?: string;
   created_at?: string;
 }

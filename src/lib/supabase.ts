@@ -213,6 +213,7 @@ CREATE TABLE IF NOT EXISTS personal_logistics (
   condition TEXT DEFAULT 'Bagus',
   status TEXT DEFAULT 'Terbawa',
   is_private BOOLEAN DEFAULT FALSE,
+  image_url TEXT,
   notes TEXT,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );

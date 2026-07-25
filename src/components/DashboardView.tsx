@@ -23,8 +23,11 @@ import {
   AlertCircle,
   XCircle,
   ArrowRightLeft,
+  Camera,
+  Trash2,
 } from 'lucide-react';
 import { usePerkab } from '../context/PerkabContext';
+import { ImageUploader } from './ImageUploader';
 import { TabType } from './Sidebar';
 import {
   PersonalLogisticsCategory,
@@ -72,6 +75,7 @@ const DEFAULT_PERSONAL_FORM = {
   condition: 'Bagus' as ItemCondition,
   status: 'Terbawa' as PersonalItemStatus,
   isPrivate: true,
+  imageUrl: '',
   notes: '',
 };
 
@@ -124,6 +128,44 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigate, onOpen
   const myPrivateCount = myPersonalItems.filter(i => i.isPrivate).length;
   const myPublicCount = myPersonalItems.filter(i => !i.isPrivate).length;
 
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const MAX_SIZE = 800;
+        let width = img.width;
+        let height = img.height;
+
+        if (width > height) {
+          if (width > MAX_SIZE) {
+            height = Math.round((height * MAX_SIZE) / width);
+            width = MAX_SIZE;
+          }
+        } else {
+          if (height > MAX_SIZE) {
+            width = Math.round((width * MAX_SIZE) / height);
+            height = MAX_SIZE;
+          }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          ctx.drawImage(img, 0, 0, width, height);
+          setPersonalForm(f => ({ ...f, imageUrl: canvas.toDataURL('image/jpeg', 0.82) }));
+        }
+      };
+      img.src = event.target?.result as string;
+    };
+    reader.readAsDataURL(file);
+  };
+
   const handleAddPersonalSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!currentUser || !personalForm.itemName.trim()) return;
@@ -138,6 +180,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigate, onOpen
       condition: personalForm.condition,
       status: personalForm.status,
       isPrivate: personalForm.isPrivate,
+      imageUrl: personalForm.imageUrl || undefined,
       notes: personalForm.notes.trim() || undefined,
     });
 
@@ -798,6 +841,12 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigate, onOpen
                   required
                 />
               </div>
+
+              <ImageUploader
+                value={personalForm.imageUrl}
+                onChange={url => setPersonalForm(f => ({ ...f, imageUrl: url }))}
+                label="Foto / Gambar Barang (Opsional)"
+              />
 
               <div>
                 <label className="block font-semibold text-slate-300 mb-1">Kategori</label>
