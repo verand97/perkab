@@ -48,13 +48,23 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const isAdmin = currentUser?.role === 'Admin';
   const [isMobileOpen, setIsMobileOpen] = useState(false);
 
-  const menuItems = [
+  const isAnggota = currentUser?.role === 'Anggota';
+
+  const allMenuItems = [
     {
       id: 'dashboard' as TabType,
-      label: 'Dashboard Overview',
+      label: isAnggota ? 'Dashboard Personal' : 'Dashboard Overview',
       shortLabel: 'Dashboard',
       icon: LayoutDashboard,
-      description: 'Ringkasan & Aktivitas',
+      description: isAnggota ? 'Ringkasan Logistik Pribadi & Posko' : 'Ringkasan & Aktivitas',
+    },
+    {
+      id: 'personal-logistics' as TabType,
+      label: isAnggota ? 'Logistik Pribadi Saya' : 'Logistik Pribadi',
+      shortLabel: 'Barang Saya',
+      icon: Backpack,
+      description: 'Pendataan Barang Bawaan & Kebutuhan',
+      badgeColor: 'bg-violet-500/20 text-violet-300 border-violet-500/30',
     },
     {
       id: 'inventory' as TabType,
@@ -114,15 +124,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
       badgeColor: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30',
       description: 'Kelola Akun & Hak Akses',
     },
-    {
-      id: 'personal-logistics' as TabType,
-      label: 'Logistik Pribadi',
-      shortLabel: 'Pribadi',
-      icon: Backpack,
-      description: 'Barang Bawaan & Kebutuhan',
-      badgeColor: 'bg-violet-500/20 text-violet-300 border-violet-500/30',
-    },
   ];
+
+  const menuItems = isAnggota
+    ? allMenuItems.filter(item => item.id === 'dashboard' || item.id === 'personal-logistics')
+    : allMenuItems;
 
   const activeItem = menuItems.find(i => i.id === activeTab) || menuItems[0];
   const ActiveIcon = activeItem.icon;

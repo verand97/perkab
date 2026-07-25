@@ -59,6 +59,11 @@ const AppContent: React.FC = () => {
   const upcomingEventsCount = eventSetups.filter(e => e.setupStatus !== 'Selesai').length;
   const pendingMaintenanceCount = maintenanceLogs.filter(m => m.status !== 'Selesai Perbaikan').length;
 
+  const isAnggota = currentUser.role === 'Anggota';
+  const effectiveTab = (isAnggota && activeTab !== 'dashboard' && activeTab !== 'personal-logistics')
+    ? 'dashboard'
+    : activeTab;
+
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans selection:bg-emerald-500 selection:text-slate-950">
       {/* Header Navbar */}
@@ -71,7 +76,7 @@ const AppContent: React.FC = () => {
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 lg:px-8 py-6 flex flex-col lg:flex-row gap-6">
         {/* Sidebar Navigation */}
         <Sidebar
-          activeTab={activeTab}
+          activeTab={effectiveTab}
           setActiveTab={setActiveTab}
           badgeCounts={{
             inventory: inventory.length,
@@ -83,30 +88,30 @@ const AppContent: React.FC = () => {
 
         {/* Content Area */}
         <section className="flex-1 min-w-0">
-          {activeTab === 'dashboard' && (
+          {effectiveTab === 'dashboard' && (
             <DashboardView
               onNavigate={setActiveTab}
               onOpenExport={() => setIsExportOpen(true)}
             />
           )}
 
-          {activeTab === 'inventory' && (
+          {effectiveTab === 'inventory' && (
             <InventoryView onOpenExport={() => setIsExportOpen(true)} />
           )}
 
-          {activeTab === 'borrowings' && <BorrowingView />}
+          {effectiveTab === 'borrowings' && <BorrowingView />}
 
-          {activeTab === 'posko' && <PoskoView />}
+          {effectiveTab === 'posko' && <PoskoView />}
 
-          {activeTab === 'events' && <EventLogisticsView />}
+          {effectiveTab === 'events' && <EventLogisticsView />}
 
-          {activeTab === 'transport' && <TransportView />}
+          {effectiveTab === 'transport' && <TransportView />}
 
-          {activeTab === 'maintenance' && <MaintenanceView />}
+          {effectiveTab === 'maintenance' && <MaintenanceView />}
 
-          {activeTab === 'users' && <UserManagementView />}
+          {effectiveTab === 'users' && <UserManagementView />}
 
-          {activeTab === 'personal-logistics' && <PersonalLogisticsView />}
+          {effectiveTab === 'personal-logistics' && <PersonalLogisticsView />}
         </section>
       </main>
 
