@@ -10,6 +10,7 @@ import {
   Trash2,
   X,
   Code2,
+  ShieldAlert,
 } from 'lucide-react';
 import { usePerkab } from '../context/PerkabContext';
 import { SUPABASE_SQL_SCHEMA } from '../lib/supabase';
@@ -21,6 +22,7 @@ interface SettingsModalProps {
 
 export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
   const {
+    currentUser,
     supabaseConfig,
     updateSupabaseConfig,
     resetToSampleData,
@@ -36,6 +38,32 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
   const [showSql, setShowSql] = useState(false);
 
   if (!isOpen) return null;
+
+  const isAdmin = currentUser?.role === 'Admin';
+
+  if (!isAdmin) {
+    return (
+      <div className="fixed inset-0 z-90 flex items-center justify-center p-3 sm:p-4 bg-slate-950/95 backdrop-blur-xl">
+        <div className="glass-card w-full max-w-md rounded-2xl sm:rounded-3xl p-6 border border-rose-500/40 text-center space-y-4 shadow-2xl my-auto">
+          <div className="w-12 h-12 rounded-2xl bg-rose-500/20 text-rose-400 mx-auto flex items-center justify-center border border-rose-500/30">
+            <ShieldAlert className="w-6 h-6" />
+          </div>
+          <div>
+            <h3 className="text-base font-extrabold text-white font-heading">Akses Ditolak (Khusus Admin)</h3>
+            <p className="text-xs text-slate-400 mt-1.5 leading-relaxed">
+              Pengaturan Database Supabase &amp; Opsi Reset Data hanya dapat diakses oleh <strong className="text-emerald-400 font-semibold">Admin Utama Perkab KKN</strong>.
+            </p>
+          </div>
+          <button
+            onClick={onClose}
+            className="w-full py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold transition-all cursor-pointer"
+          >
+            Tutup
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   const handleSaveSupabase = async (e: React.FormEvent) => {
     e.preventDefault();

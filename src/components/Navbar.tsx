@@ -19,6 +19,7 @@ interface NavbarProps {
 
 export const Navbar: React.FC<NavbarProps> = ({ onOpenExport, onOpenSettings }) => {
   const { supabaseConfig, currentUser, logout, themeMode, toggleTheme } = usePerkab();
+  const isAdmin = currentUser?.role === 'Admin';
 
   return (
     <header className="sticky top-0 z-30 bg-slate-950/80 dark:bg-slate-950/80 light:bg-white/80 backdrop-blur-xl border-b border-slate-800/80 light:border-slate-200 px-4 lg:px-8 py-3 transition-colors">
@@ -64,31 +65,54 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenExport, onOpenSettings }) 
           )}
 
           {/* Database Status Chip */}
-          <button
-            onClick={onOpenSettings}
-            className={`hidden md:flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all ${
-              supabaseConfig.isConnected
-                ? 'bg-emerald-950/40 text-emerald-300 border-emerald-500/30 hover:bg-emerald-900/50'
-                : 'bg-slate-900 dark:bg-slate-900 light:bg-slate-100 text-slate-300 dark:text-slate-300 light:text-slate-700 border-slate-800 dark:border-slate-800 light:border-slate-300 hover:bg-slate-800'
-            }`}
-          >
-            {supabaseConfig.isConnected ? (
-              <>
-                <CloudCheck className="w-4 h-4 text-emerald-400 animate-pulse" />
-                <span>Supabase Online</span>
-              </>
-            ) : (
-              <>
-                <HardDrive className="w-4 h-4 text-amber-400" />
-                <span>Mode Local</span>
-              </>
-            )}
-          </button>
+          {isAdmin ? (
+            <button
+              onClick={onOpenSettings}
+              className={`hidden md:flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all cursor-pointer ${
+                supabaseConfig.isConnected
+                  ? 'bg-emerald-950/40 text-emerald-300 border-emerald-500/30 hover:bg-emerald-900/50'
+                  : 'bg-slate-900 dark:bg-slate-900 light:bg-slate-100 text-slate-300 dark:text-slate-300 light:text-slate-700 border-slate-800 dark:border-slate-800 light:border-slate-300 hover:bg-slate-800'
+              }`}
+              title="Pengaturan Database & Sync (Khusus Admin)"
+            >
+              {supabaseConfig.isConnected ? (
+                <>
+                  <CloudCheck className="w-4 h-4 text-emerald-400 animate-pulse" />
+                  <span>Supabase Online</span>
+                </>
+              ) : (
+                <>
+                  <HardDrive className="w-4 h-4 text-amber-400" />
+                  <span>Mode Local</span>
+                </>
+              )}
+            </button>
+          ) : (
+            <div
+              className={`hidden md:flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-semibold border ${
+                supabaseConfig.isConnected
+                  ? 'bg-emerald-950/40 text-emerald-300 border-emerald-500/30'
+                  : 'bg-slate-900 dark:bg-slate-900 light:bg-slate-100 text-slate-300 border-slate-800'
+              }`}
+            >
+              {supabaseConfig.isConnected ? (
+                <>
+                  <CloudCheck className="w-4 h-4 text-emerald-400" />
+                  <span>Supabase Online</span>
+                </>
+              ) : (
+                <>
+                  <HardDrive className="w-4 h-4 text-amber-400" />
+                  <span>Mode Local</span>
+                </>
+              )}
+            </div>
+          )}
 
           {/* Theme Toggle Button (Light / Dark) */}
           <button
             onClick={toggleTheme}
-            className="p-2 rounded-xl bg-slate-900 dark:bg-slate-900 light:bg-slate-100 text-slate-300 dark:text-slate-300 light:text-amber-600 border border-slate-800 dark:border-slate-800 light:border-slate-300 hover:bg-slate-800 dark:hover:bg-slate-800 light:hover:bg-slate-200 transition-all"
+            className="p-2 rounded-xl bg-slate-900 dark:bg-slate-900 light:bg-slate-100 text-slate-300 dark:text-slate-300 light:text-amber-600 border border-slate-800 dark:border-slate-800 light:border-slate-300 hover:bg-slate-800 dark:hover:bg-slate-800 light:hover:bg-slate-200 transition-all cursor-pointer"
             title={themeMode === 'dark' ? 'Ganti ke Mode Terang (Light)' : 'Ganti ke Mode Gelap (Dark)'}
           >
             {themeMode === 'dark' ? (
@@ -101,20 +125,22 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenExport, onOpenSettings }) 
           {/* Export Excel Button */}
           <button
             onClick={onOpenExport}
-            className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-extrabold shadow-lg shadow-emerald-600/30 active:scale-95 transition-all border border-emerald-400/40 font-heading"
+            className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-extrabold shadow-lg shadow-emerald-600/30 active:scale-95 transition-all border border-emerald-400/40 font-heading cursor-pointer"
           >
             <FileSpreadsheet className="w-4 h-4 text-white" />
             <span className="hidden sm:inline">Rekap Excel / CSV</span>
           </button>
 
-          {/* Settings Trigger */}
-          <button
-            onClick={onOpenSettings}
-            className="p-2 rounded-xl bg-slate-900 dark:bg-slate-900 light:bg-slate-100 text-slate-300 dark:text-slate-300 light:text-slate-700 border border-slate-800 dark:border-slate-800 light:border-slate-300 hover:bg-slate-800 dark:hover:bg-slate-800 light:hover:bg-slate-200 transition-colors"
-            title="Pengaturan Database"
-          >
-            <Settings className="w-4 h-4" />
-          </button>
+          {/* Settings Trigger - Admin Only */}
+          {isAdmin && (
+            <button
+              onClick={onOpenSettings}
+              className="p-2 rounded-xl bg-slate-900 dark:bg-slate-900 light:bg-slate-100 text-slate-300 dark:text-slate-300 light:text-slate-700 border border-slate-800 dark:border-slate-800 light:border-slate-300 hover:bg-slate-800 dark:hover:bg-slate-800 light:hover:bg-slate-200 transition-colors cursor-pointer"
+              title="Pengaturan Database & Backend (Admin)"
+            >
+              <Settings className="w-4 h-4" />
+            </button>
+          )}
 
           {/* Logout Button */}
           {currentUser && (
