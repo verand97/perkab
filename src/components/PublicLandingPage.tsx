@@ -456,10 +456,10 @@ export const PublicLandingPage: React.FC<PublicLandingPageProps> = ({ onLoginCli
       {/* ── FOOTER ───────────────────────────────────────────────────── */}
       <footer className="border-t border-slate-800/60 py-6 mt-4">
         <div className="max-w-7xl mx-auto px-4 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-3 text-[11px] text-slate-500">
-          <div className="flex items-center gap-2">
-            <Package className="w-3.5 h-3.5 text-emerald-500" />
+          <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
+            <Package className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
             <strong className="text-slate-300">PERKAB.KKN</strong>
-            — Sistem Perlengkapan, Akomodasi &amp; Logistik Kelompok KKN 2026
+            <span>— Sistem Perlengkapan, Akomodasi &amp; Logistik Kelompok KKN Desa Sumanding 2026</span>
           </div>
           <div className="flex items-center gap-2">
             <Star className="w-3 h-3 text-amber-500/60" />

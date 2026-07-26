@@ -119,7 +119,7 @@ const AppContent: React.FC = () => {
       <footer className="border-t border-slate-800/80 py-4 text-center text-xs text-slate-500">
         <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
           <div>
-            <strong>Perkab System</strong> — Perlengkapan, Akomodasi & Logistik Kelompok KKN 2026
+            <strong>Perkab System</strong> — Perlengkapan, Akomodasi & Logistik Kelompok KKN Desa Sumanding 2026
           </div>
           <div className="text-[11px] text-slate-400">
             User Aktif: <strong className="text-emerald-400 font-semibold capitalize">{currentUser.name}</strong> ({currentUser.role})

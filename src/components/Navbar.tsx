@@ -39,7 +39,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenExport, onOpenSettings }) 
               </span>
             </div>
             <p className="text-[11px] text-slate-400 light:text-slate-500 font-medium hidden sm:block">
-              Perlengkapan, Akomodasi & Logistik Kelompok
+              Perlengkapan, Akomodasi & Logistik KKN Desa Sumanding
             </p>
           </div>
         </div>
