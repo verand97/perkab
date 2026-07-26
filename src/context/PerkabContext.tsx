@@ -280,7 +280,7 @@ export const PerkabProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
         // 2. Inventory
         const { data: invData } = await client!.from('inventory').select('*');
-        if (invData && invData.length > 0) {
+        if (invData) {
           setInventory(invData.map((d: any) => ({
             id: d.id, code: d.code, name: d.name, category: d.category,
             quantity: d.quantity, availableQty: d.available_qty, unit: d.unit,
@@ -291,7 +291,7 @@ export const PerkabProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
         // 3. Borrowings
         const { data: borData } = await client!.from('borrowings').select('*');
-        if (borData && borData.length > 0) {
+        if (borData) {
           setBorrowings(borData.map((b: any) => ({
             id: b.id, itemName: b.item_name, inventoryId: b.inventory_id,
             lenderName: b.lender_name, lenderPhone: b.lender_phone,
@@ -304,7 +304,7 @@ export const PerkabProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
         // 4. Facilities
         const { data: facData } = await client!.from('posko_facilities').select('*');
-        if (facData && facData.length > 0) {
+        if (facData) {
           setFacilities(facData.map((f: any) => ({
             id: f.id, facilityName: f.facility_name, category: f.category || 'Listrik',
             status: f.status, lastChecked: f.last_checked, picName: f.pic_name, details: f.details,
@@ -313,7 +313,7 @@ export const PerkabProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
         // 5. Rooms
         const { data: roomData } = await client!.from('posko_rooms').select('*');
-        if (roomData && roomData.length > 0) {
+        if (roomData) {
           setRooms(roomData.map((r: any) => ({
             id: r.id, roomName: r.room_name, capacity: r.capacity,
             occupants: r.occupants || [], assignedEquipment: r.assigned_equipment || [], notes: r.notes,
@@ -322,7 +322,7 @@ export const PerkabProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
         // 6. Events
         const { data: evtData } = await client!.from('event_setups').select('*');
-        if (evtData && evtData.length > 0) {
+        if (evtData) {
           setEventSetups(evtData.map((e: any) => ({
             id: e.id, eventName: e.event_name || e.event_title, eventDate: e.event_date,
             location: e.location, picName: e.pic_name || 'PJ Event', setupStatus: e.setup_status,
@@ -332,7 +332,7 @@ export const PerkabProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
         // 7. Transports
         const { data: trpData } = await client!.from('transports').select('*');
-        if (trpData && trpData.length > 0) {
+        if (trpData) {
           setTransports(trpData.map((t: any) => ({
             id: t.id, vehicleName: t.vehicle_name, vehicleType: t.vehicle_type || 'Mobil',
             driverName: t.driver_name, purpose: t.purpose || t.route || 'Mobilisasi',
@@ -344,7 +344,7 @@ export const PerkabProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
         // 8. Maintenance Logs
         const { data: mtnData } = await client!.from('maintenance_logs').select('*');
-        if (mtnData && mtnData.length > 0) {
+        if (mtnData) {
           setMaintenanceLogs(mtnData.map((m: any) => ({
             id: m.id, itemName: m.item_name, reportedBy: m.reported_by,
             damageDescription: m.damage_description || m.issue_description || '',
@@ -355,7 +355,7 @@ export const PerkabProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
         // 9. Personal Logistics
         const { data: plData } = await client!.from('personal_logistics').select('*');
-        if (plData && plData.length > 0) {
+        if (plData) {
           setPersonalLogistics(plData.map((d: any) => ({
             id: d.id, ownerId: d.owner_id, ownerName: d.owner_name,
             itemName: d.item_name, category: d.category, quantity: d.quantity,
@@ -978,6 +978,7 @@ export const PerkabProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     setEventSetups([]);
     setTransports([]);
     setMaintenanceLogs([]);
+    setPersonalLogistics([]);
 
     const emptyData = {
       users,
@@ -988,6 +989,7 @@ export const PerkabProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       eventSetups: [],
       transports: [],
       maintenanceLogs: [],
+      personalLogistics: [],
     };
     localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(emptyData));
 
@@ -1002,6 +1004,7 @@ export const PerkabProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           await client.from('event_setups').delete().neq('id', '');
           await client.from('transports').delete().neq('id', '');
           await client.from('maintenance_logs').delete().neq('id', '');
+          await client.from('personal_logistics').delete().neq('id', '');
         } catch (e) {
           console.error('Failed to clear Supabase data:', e);
         }
